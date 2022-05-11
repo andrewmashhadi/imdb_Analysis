@@ -1,3 +1,5 @@
+## author: andrew mashhadi
+
 library(rjson)
 
 xpath_main_data <- Sys.getenv("PATH_MY_MAIN_DATA")

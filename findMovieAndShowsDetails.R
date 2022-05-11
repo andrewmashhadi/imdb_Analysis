@@ -1,3 +1,4 @@
+## author: andrew mashhadi
 
 ### FIND INFORMATION FROM TOP 250 AND BOX OFFICE LISTS 
 

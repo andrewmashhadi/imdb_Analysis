@@ -1,3 +1,4 @@
+## author: andrew mashhadi
 
 ### MOVE SCRAPED JSON DATA TO MYSQL DATABASE
 
@@ -230,7 +231,7 @@ if(!xbool.tableExists) {
 tmp_ls <- fromJSON(file=xpath_BO)[["items"]]
 
 item = 1
-for (item in 2:length(tmp_ls)) {
+for (item in 1:length(tmp_ls)) {
   
   id <- tmp_ls[[item]]$id
   title <- dbEscapeStrings(con, tmp_ls[[item]]$title)

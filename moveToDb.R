@@ -1,0 +1,132 @@
+
+### MOVE SCRAPED JSON DATA TO MYSQL DATABASE
+
+
+library(RMySQL)
+library(rjson)
+
+xpath_main_data <- Sys.getenv("PATH_MY_MAIN_DATA")
+ximdb_api_key <- Sys.getenv("IMDB_API_KEY")
+
+xpath_BO <-
+  file.path(xpath_main_data, "IMDb_data", "topBoxOffice", "BoxOfficeAllTime_Movies.json")
+
+xpath_t250m <-
+  file.path(xpath_main_data, "IMDb_data", "top250", "top250_Movies.json")
+
+xpath_t250s <-
+  file.path(xpath_main_data, "IMDb_data", "top250", "top250_TVs.json")
+
+xpath_details <-
+  file.path(xpath_main_data, "IMDb_data", "movie_tv_details")
+
+
+### connect to my database
+
+drv <- dbDriver("MySQL")
+
+xdbsock <- ""
+xdbuser <- Sys.getenv("MAS405_AWS_MY_DB_ADMIN_USER")
+xpw     <- Sys.getenv("MAS405_AWS_MY_DB_ADMIN_PW")
+xdbname <- Sys.getenv("MAS405_AWS_MY_DB_ADMIN_DBNAME")
+xdbhost <- Sys.getenv("MAS405_AWS_MY_DB_ADMIN_HOST")
+xdbport <- as.integer( Sys.getenv("MAS405_AWS_MY_DB_ADMIN_PORT") )
+
+con <-
+  dbConnect(
+    drv,
+    user=xdbuser,
+    password=xpw,
+    dbname=xdbname,
+    host=xdbhost,
+    port=xdbport,
+    unix.sock=xdbsock
+  )
+
+dbListTables(con)
+
+dbGetInfo(con)
+
+#### load top 250 movies to database
+
+
+xtableName_t250m <- "imdb_top250_movies"
+
+xbool.tableExists <- dbExistsTable(con, xtableName_t250m)
+
+
+if(!xbool.tableExists) {
+  qstr <-
+    paste0(
+      "CREATE TABLE ", xtableName_t250m, "  ",
+      "(id VARCHAR(15) NOT NULL, ",
+      "ranking INT(7), ",
+      "title TEXT, ",
+      "fullTitle TEXT, ",
+      "year INT(10), ",
+      "crew TEXT, ",
+      "imDbRating DOUBLE, ",
+      "imDbRatingCount INT(10), ", 
+      "PRIMARY KEY (id))"
+    )
+  
+  xx <- dbGetQuery(con, qstr)
+}
+
+tmp_ls <- fromJSON(file=xpath_t250m)[["items"]]
+
+item = 1
+for (item in 1:length(tmp_ls)) {
+  
+  id <- tmp_ls[[item]]$id
+  title <- dbEscapeStrings(con, tmp_ls[[item]]$title)
+  fullTitle <- dbEscapeStrings(con, tmp_ls[[item]]$fullTitle)
+  rank <- as.integer(tmp_ls[[item]]$rank)
+  year <- as.integer(tmp_ls[[item]]$year)
+  crew <- dbEscapeStrings(con, tmp_ls[[item]]$crew)
+  imDbRating <- as.numeric(tmp_ls[[item]]$imDbRating)
+  imDbRatingCount <- as.integer(tmp_ls[[item]]$imDbRatingCount)
+
+  
+  xx <- dbGetQuery(con, paste0("SELECT id FROM ", xtableName_t250m, " WHERE id='", id, "'"))
+  
+  if( nrow(xx) == 0 ){
+    
+    qstr <-
+      paste0(
+        "INSERT INTO ", xtableName_t250m, " (id, ranking, title, fullTitle, year, crew, imDbRating, imDbRatingCount) ",
+        " VALUES ",
+        "('",
+        id, "', ",
+        rank, ", '",
+        title, "', '",
+        fullTitle, "', ",
+        year, ", '",
+        crew, "', ",
+        imDbRating, ", ",
+        imDbRatingCount, ")"
+      )
+    
+    
+    xx <- try( dbGetQuery(con, qstr), silent=TRUE )
+    
+    if( "try-error" %in% class(xx) ) {
+      cat("SQL insert into Top 250 Movie Table failed for", title, "\n")
+    } else {
+      cat("Successfully inserted", title, "into Team Table", "\n")
+    }
+    
+  } else {
+    cat( title, "already present in Top 250 Movie Table", "\n")
+  }
+ 
+}
+
+
+
+dbDisconnect(con)
+
+
+
+
+

@@ -1,0 +1,17 @@
+We could use the imdb dataset included to:
+
+	- Place in tables on aws db
+	- clean the data
+	- extract using r 
+	- create general plots for genre, ratings, durations, movie vs tv show, etc.
+	- Use a simple clustering algorithm (i.e. K-means) for determining similar shows/movies 
+	  independently and combined 
+
+Could make it more complex with additions:
+	
+	- scrape the imdb data ourselves
+	- apply algorithm to check for similar descriptions of movies/shows
+	- apply binary regression tree (boosting or random forest), or 
+          NLP algorithm for predicting the rating of the movie/show
+        - Use JSON file for data dictionary of data. Upload to data dictionary table. 
+	- Use https://imdb-api.com/api#Top250Movies-header to webscape the data directly.

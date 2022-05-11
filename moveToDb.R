@@ -112,8 +112,9 @@ for (item in 1:length(tmp_ls)) {
     
     if( "try-error" %in% class(xx) ) {
       cat("SQL insert into Top 250 Movie Table failed for", title, "\n")
+      stop()
     } else {
-      cat("Successfully inserted", title, "into Team Table", "\n")
+      cat("Successfully inserted", title, "into Top 250 Movie Table", "\n")
     }
     
   } else {
@@ -122,6 +123,168 @@ for (item in 1:length(tmp_ls)) {
  
 }
 
+
+### load top 250 shows to database
+
+
+xtableName_t250s <- "imdb_top250_shows"
+
+xbool.tableExists <- dbExistsTable(con, xtableName_t250s)
+
+
+if(!xbool.tableExists) {
+  qstr <-
+    paste0(
+      "CREATE TABLE ", xtableName_t250s, "  ",
+      "(id VARCHAR(15) NOT NULL, ",
+      "ranking INT(7), ",
+      "title TEXT, ",
+      "fullTitle TEXT, ",
+      "year INT(10), ",
+      "crew TEXT, ",
+      "imDbRating DOUBLE, ",
+      "imDbRatingCount INT(10), ", 
+      "PRIMARY KEY (id))"
+    )
+  
+  xx <- dbGetQuery(con, qstr)
+}
+
+tmp_ls <- fromJSON(file=xpath_t250s)[["items"]]
+
+item = 1
+for (item in 1:length(tmp_ls)) {
+  
+  id <- tmp_ls[[item]]$id
+  title <- dbEscapeStrings(con, tmp_ls[[item]]$title)
+  fullTitle <- dbEscapeStrings(con, tmp_ls[[item]]$fullTitle)
+  rank <- as.integer(tmp_ls[[item]]$rank)
+  year <- as.integer(tmp_ls[[item]]$year)
+  crew <- dbEscapeStrings(con, tmp_ls[[item]]$crew)
+  imDbRating <- as.numeric(tmp_ls[[item]]$imDbRating)
+  imDbRatingCount <- as.integer(tmp_ls[[item]]$imDbRatingCount)
+  
+  
+  xx <- dbGetQuery(con, paste0("SELECT id FROM ", xtableName_t250s, " WHERE id='", id, "'"))
+  
+  if( nrow(xx) == 0 ){
+    
+    qstr <-
+      paste0(
+        "INSERT INTO ", xtableName_t250s, " (id, ranking, title, fullTitle, year, crew, imDbRating, imDbRatingCount) ",
+        " VALUES ",
+        "('",
+        id, "', ",
+        rank, ", '",
+        title, "', '",
+        fullTitle, "', ",
+        year, ", '",
+        crew, "', ",
+        imDbRating, ", ",
+        imDbRatingCount, ")"
+      )
+    
+    
+    xx <- try( dbGetQuery(con, qstr), silent=TRUE )
+    
+    if( "try-error" %in% class(xx) ) {
+      cat("SQL insert into Top 250 Shows Table failed for", title, "\n")
+      stop()
+    } else {
+      cat("Successfully inserted", title, "into Top 250 Shows Table", "\n")
+    }
+    
+  } else {
+    cat( title, "already present in Top 250 Shows Table", "\n")
+  }
+  
+}
+
+### load top 200 box office movies to database
+
+
+xtableName_BO <- "imdb_boxOffice"
+
+xbool.tableExists <- dbExistsTable(con, xtableName_BO)
+
+
+if(!xbool.tableExists) {
+    qstr <-
+    paste0(
+      "CREATE TABLE ", xtableName_BO, "  ",
+      "(id VARCHAR(15) NOT NULL, ",
+      "ranking INT(7), ",
+      "title TEXT, ",
+      "year INT(10), ",
+      "worldwideLifetimeGross BIGINT(12), ",
+      "domesticLifetimeGross BIGINT(12), ",
+      "domestic DOUBLE, ",
+      "foreignLifetimeGross BIGINT(12), ",
+      "_foreign DOUBLE, ",
+      "PRIMARY KEY (id))"
+    )
+  
+  xx <- dbGetQuery(con, qstr)
+}
+
+tmp_ls <- fromJSON(file=xpath_BO)[["items"]]
+
+item = 1
+for (item in 2:length(tmp_ls)) {
+  
+  id <- tmp_ls[[item]]$id
+  title <- dbEscapeStrings(con, tmp_ls[[item]]$title)
+  rank <- as.integer(tmp_ls[[item]]$rank)
+  year <- as.integer(tmp_ls[[item]]$year)
+  ww_gross <- as.numeric(gsub('\\$|,', '', tmp_ls[[item]]$worldwideLifetimeGross))
+  
+  d_gross <-gsub('\\$|,', '', tmp_ls[[item]]$domesticLifetimeGross)
+  d_gross <-as.numeric(gsub('-', '0', d_gross))
+  
+  dom_prtg <-gsub('<|%', '', tmp_ls[[item]]$domestic)
+  dom_prtg <-as.numeric(gsub('-', '0', dom_prtg))
+  
+  f_gross <-gsub('\\$|,', '', tmp_ls[[item]]$foreignLifetimeGross)
+  f_groww <-as.numeric(gsub('-', '0', f_gross))
+  
+  for_prtg <-gsub('<|%', '', tmp_ls[[item]]$foreign)
+  for_prtg <-as.numeric(gsub('-', '0', for_prtg))
+  
+  xx <- dbGetQuery(con, paste0("SELECT id FROM ", xtableName_BO, " WHERE id='", id, "'"))
+  
+  if( nrow(xx) == 0 ){
+    
+    qstr <-
+      paste0(
+        "INSERT INTO ", xtableName_BO, " (id, ranking, title, year, worldwideLifetimeGross, domesticLifetimeGross, domestic, foreignLifetimeGross, _foreign) ",
+        " VALUES ",
+        "('",
+        id, "', ",
+        rank, ", '",
+        title, "', ",
+        year, ", ",
+        ww_gross, ", ",
+        d_gross, ", ",
+        dom_prtg, ", ",
+        f_gross, ", ",
+        f_gross, ")"
+      )
+    
+    
+    xx <- try( dbGetQuery(con, qstr), silent=TRUE )
+    
+    if( "try-error" %in% class(xx) ) {
+      cat("SQL insert into Box Office Table failed for", title, "\n")
+      stop()
+    } else {
+      cat("Successfully inserted", title, "into Box Office Table", "\n")
+    }
+    
+  } else {
+    cat( title, "already present into Box Office Table", "\n")
+  }
+  
+}
 
 
 dbDisconnect(con)

@@ -1,6 +1,8 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 
 <!-- ```{r} -->
@@ -116,37 +118,147 @@ tfidf %>%
 ## Genres and Relationship with IMDB Ratings
 ```{r}
 # turning genres from genre column into dummy variables
-temp <- (imdb_details %>%
+temp <- imdb_details %>%
   select(X, id, fullTitle, type, year, imDbRating, genres) %>%
-  unnest_tokens(word, genres) %>%
+  unnest_tokens(word, genres, token = str_split, pattern = ", ") %>%
   group_by(X, id, fullTitle, type, year, imDbRating, word) %>%
   summarise(n = n()) %>%
-  cast_sparse(fullTitle, word, n))
+  cast_sparse(fullTitle, word, n)
 
 # combining imdb details data with dummy variables
 data <- cbind(imdb_details %>% select(X, id, fullTitle, type, year, imDbRating, genres), data.frame(as.matrix(temp)))
 
-# recombining sci-fi, noir-film, and reality-tv back into one word
-data <- data %>%
-  select(-fi, -film, -tv) %>%
-  rename(scifi = sci,
-         noirfilm = noir,
-         realitytv = reality)
-
 ## Linear Regression
 # initial model with all genres
-summary(lm(imDbRating ~ comedy + drama + family + action + romance + adventure + scifi + biography + history + crime + mystery + thriller + fantasy + war + noirfilm + western + musical + horror + music + animation + documentary + sport + game + show + realitytv + news + short + talk, data))
+MASS::stepAIC(lm(imDbRating ~ comedy + drama + family + action + romance + adventure + sci.fi + biography + history + crime + mystery + thriller + fantasy + war + film.noir + western + musical + horror + music + animation + documentary + sport + game.show + reality.tv + news + short + talk.show, data), direction = "backward", trace = F)
 
-# removed talk, crime, music, mystery, western, horror, game, war, drama, history, news, short, sport, noirfilm, realitytv, musical, show, family, biography, romance (0.07145)
-summary(lm(imDbRating ~ comedy + action + adventure + scifi + thriller + fantasy + animation + documentary, data))
+# Final Regression Model after Backwards Selection - Note, this is the same as doing car::Anova
+summary(lm(imDbRating ~ comedy + action + romance + adventure + sci.fi + biography + thriller + fantasy + animation + documentary, data))
 
 ## ANOVA
-# initial model with all genres
-car::Anova(lm(imDbRating ~ comedy + drama + family + action + romance + adventure + scifi + biography + history + crime + mystery + thriller + fantasy + war + noirfilm + western + musical + horror + music + animation + documentary + sport + game + show + realitytv + news + short + talk, data))
-
-# removed talk, crime, mystery, music, war, game, horror, western, drama, history, news, short, sport, noirfilm, realitytv, musical, show, family, biography, romance (0.071405)
-car::Anova(lm(imDbRating ~ comedy + action + adventure + scifi + thriller + fantasy + animation + documentary, data))
+car::Anova(lm(imDbRating ~ comedy + action + romance + adventure + sci.fi + biography + thriller + fantasy + animation + documentary, data))
 ```
+
+
+## Keywords and Relationship with IMDB Ratings
+```{r}
+# turning keywords / phrases from keywords column into dummy variables
+temp <- imdb_details %>%
+  select(X, id, fullTitle, type, year, imDbRating, keywords) %>%
+  unnest_tokens(word, keywords, token = str_split, pattern = ",") %>%
+  group_by(X, id, fullTitle, type, year, imDbRating, word) %>%
+  summarise(n = n()) %>%
+  cast_sparse(fullTitle, word, n)
+
+# combining imdb details data with dummy variables
+data <- cbind(imdb_details %>% select(imDbRating), data.frame(as.matrix(temp)))
+
+# useless because there are 2114 keywords / phrases
+summary(lm(imDbRating ~ ., data))
+
+# going to use PCA to reduce dimensions, hopefully we can use PCs to describe relationship between keywords / phrases and imdb ratings
+pc <- prcomp(data %>% select(-imDbRating))
+variance_explained <- pc$sdev^2 / sum(pc$sdev^2)
+
+qplot(c(1:4), variance_explained[1:4]) + 
+  geom_line() + 
+  xlab("Principal Component") + 
+  ylab("Variance Explained") +
+  ggtitle("Scree Plot") +
+  ylim(0, 1)
+
+# PCA did not help reduce dimensions, therefore, there probably is not a relationship between keywords / phrases and imdb score
+```
+
+
+## Clustering genres together into 2 groups - maybe the 2 groups represent movies and tv shows
+```{r}
+library(topicmodels)
+
+# turning genres from genre column into dummy variables
+temp <- imdb_details %>%
+  select(X, id, fullTitle, type, year, imDbRating, genres) %>%
+  unnest_tokens(word, genres, token = str_split, pattern = ", ") %>%
+  group_by(X, id, fullTitle, type, year, imDbRating, word) %>%
+  summarise(n = n()) %>%
+  cast_sparse(fullTitle, word, n)
+
+# beta is the probability the genre is generated from 1 of the 2 groups
+library(reshape2)
+lda <- tidy(LDA(temp, k = 2), matrix = "beta")
+
+# getting the top 10 terms for each group 
+top_terms <- lda %>%
+  group_by(topic) %>%
+  slice_max(beta, n = 10) %>% 
+  ungroup() %>%
+  arrange(topic, -beta)
+
+top_terms %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(beta, term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_y_reordered()
+
+lda %>%
+  mutate(topic = paste0("topic", topic)) %>%
+  pivot_wider(names_from = topic, values_from = beta) %>% 
+  filter(topic1 > .001 | topic2 > .001) %>%
+  mutate(log_ratio = log2(topic2 / topic1)) %>%
+  ggplot(aes(x = log_ratio, y = reorder(term, log_ratio))) + geom_bar(stat = "identity")
+```
+
+
+## Clustering keywords together into groups - maybe each group can represent a different genre
+```{r}
+library(topicmodels)
+
+# turning keywords / phrases from keywords column into dummy variables
+temp <- imdb_details %>%
+  select(X, id, fullTitle, type, year, imDbRating, keywords) %>%
+  unnest_tokens(word, keywords, token = str_split, pattern = ",") %>%
+  group_by(X, id, fullTitle, type, year, imDbRating, word) %>%
+  summarise(n = n()) %>%
+  cast_sparse(fullTitle, word, n)
+
+# beta is the probability the genre is generated from 1 of the 2 groups
+library(reshape2)
+lda <- tidy(LDA(temp, k = 27), matrix = "beta")
+
+# getting the top 5 terms for each group 
+top_terms <- lda %>%
+  group_by(topic) %>%
+  slice_max(beta, n = 5) %>% 
+  ungroup() %>%
+  arrange(topic, -beta)
+
+top_terms %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(beta, term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_y_reordered()
+
+lda %>%
+  mutate(topic = paste0("topic", topic)) %>%
+  pivot_wider(names_from = topic, values_from = beta) %>% 
+  filter(topic1 > .001 | topic2 > .001) %>%
+  mutate(log_ratio = log2(topic2 / topic1)) %>%
+  ggplot(aes(x = log_ratio, y = reorder(term, log_ratio))) + geom_bar(stat = "identity")
+
+
+# genre_gamma <- tidy(LDA(temp, k = 27), matrix = "gamma")
+# 
+# genre_gamma %>%
+#   mutate(document = reorder(document, gamma * topic)) %>%
+#   ggplot(aes(factor(topic), gamma)) +
+#   geom_boxplot() +
+#   facet_wrap(~ document) +
+#   labs(x = "topic", y = expression(gamma))
+```
+
+
 
 
 

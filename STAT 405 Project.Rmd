@@ -1,0 +1,154 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+<!-- ```{r} -->
+<!-- library(tidyverse) -->
+<!-- library(RMySQL) -->
+
+<!-- drv <- dbDriver("MySQL") -->
+
+<!-- xdbsock <- "" -->
+
+<!-- xdbuser <- Sys.getenv("MAS405_AWS_AM_DB_ROUSER_USER") -->
+<!-- xpw     <- Sys.getenv("MAS405_AWS_AM_DB_ROUSER_PW") -->
+<!-- xdbname <- Sys.getenv("MAS405_AWS_AM_DB_ROUSER_DBNAME") -->
+<!-- xdbhost <- Sys.getenv("MAS405_AWS_AM_DB_ROUSER_HOST") -->
+<!-- xdbport <- as.integer(Sys.getenv("MAS405_AWS_AM_DB_ROUSER_PORT")) -->
+
+<!-- ### establish connection with Dave's DB -->
+
+<!-- con <- dbConnect(drv, user=xdbuser, password=xpw, dbname=xdbname, host=xdbhost, port=xdbport, unix.sock=xdbsock) -->
+
+<!-- ################## get info -->
+<!-- dbListTables(con) -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- imdb_boxOffice <- dbGetQuery(con, "SELECT * FROM imdb_boxOffice") -->
+<!-- imdb_details <- dbGetQuery(con, "SELECT * FROM imdb_details") -->
+<!-- imdb_top250_movies <- dbGetQuery(con, "SELECT * FROM imdb_top250_movies") -->
+<!-- imdb_top250_shows <- dbGetQuery(con, "SELECT * FROM imdb_top250_shows") -->
+
+<!-- dbDisconnect(con) -->
+
+<!-- write.csv(imdb_boxOffice, "/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_boxOffice.csv") -->
+<!-- write.csv(imdb_details, "/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_details.csv") -->
+<!-- write.csv(imdb_top250_movies, "/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_top250_movies.csv") -->
+<!-- write.csv(imdb_top250_shows, "/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_top250_shows.csv") -->
+<!-- ``` -->
+
+
+```{r}
+library(tidyverse)
+imdb_boxOffice <- read.csv("/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_boxOffice.csv")
+imdb_details <- read.csv("/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_details.csv")
+imdb_top250_movies <- read.csv("/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_top250_movies.csv")
+imdb_top250_shows <- read.csv("/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_top250_shows.csv")
+```
+
+
+## Plot Summary - TF IDF and Most Common Words
+```{r}
+library(tm)
+library(tidytext)
+
+# Creating TF-IDF for the movie / show plots
+tfidf <- imdb_details %>%
+  select(X, id, fullTitle, type, year, imDbRating, plot) %>%
+  unnest_tokens(word, plot) %>%
+  group_by(X, id, fullTitle, type, year, imDbRating, word) %>%
+  summarise(n = n()) %>%
+  # count(fullTitle, word, sort = T) %>%
+  anti_join(stop_words) %>%
+  bind_tf_idf(word, fullTitle, n) %>%
+  arrange(fullTitle, desc(n))
+
+# Average TF-IDF score for each movie / show plot
+temp <- tfidf %>%
+  group_by(X, id, fullTitle, type, year, imDbRating) %>%
+  summarise(avg_tf_idf = mean(tf_idf))
+
+# Linear Regression - How well does plot TF-IDF predict rating
+summary(lm(imDbRating ~ avg_tf_idf, temp))
+
+
+# The 25 most frequent words in the movie plots and each word's average IMDB score
+tfidf %>%
+  filter(type == "Movie") %>%
+  group_by(word) %>%
+  summarise(n = n(),
+            avg_rating = mean(imDbRating)) %>%
+  slice_max(order_by = n, n = 25) %>%
+  ggplot(aes(x = avg_rating, y = reorder(word, avg_rating), fill = avg_rating)) + geom_col(show.legend = F) + 
+  labs(x = "Average Rating", y = "Word") + 
+  ggtitle("25 Most Frequent Words in Movie Plots")
+
+# The 25 most frequent words in the TV series plots and each word's average IMDB score
+tfidf %>%
+  filter(type == "TVSeries") %>%
+  group_by(word) %>%
+  summarise(n = n(),
+            avg_rating = mean(imDbRating)) %>%
+  slice_max(order_by = n, n = 25) %>%
+  ggplot(aes(x = avg_rating, y = reorder(word, avg_rating), fill = avg_rating)) + geom_col(show.legend = F) + 
+  labs(x = "Average Rating", y = "Word") + 
+  ggtitle("25 Most Frequent Words in TV Series Plots")
+
+# 10 most common words in movie / tv series plots, their frequency, and average rating
+top10words <- tfidf %>%
+  group_by(word) %>%
+  summarise(n = n(),
+            avg_rating = mean(imDbRating)) %>%
+  slice_max(n, n = 10)
+
+# Most common word and all plots where the word appeared
+tfidf %>%
+  filter(word %in% top10words$word[1]) %>%
+  ggplot(aes(x = imDbRating, y = reorder(fullTitle, imDbRating), fill = word)) + 
+  geom_col(show.legend = F)
+
+```
+
+
+## Genres and Relationship with IMDB Ratings
+```{r}
+# turning genres from genre column into dummy variables
+temp <- (imdb_details %>%
+  select(X, id, fullTitle, type, year, imDbRating, genres) %>%
+  unnest_tokens(word, genres) %>%
+  group_by(X, id, fullTitle, type, year, imDbRating, word) %>%
+  summarise(n = n()) %>%
+  cast_sparse(fullTitle, word, n))
+
+# combining imdb details data with dummy variables
+data <- cbind(imdb_details %>% select(X, id, fullTitle, type, year, imDbRating, genres), data.frame(as.matrix(temp)))
+
+# recombining sci-fi, noir-film, and reality-tv back into one word
+data <- data %>%
+  select(-fi, -film, -tv) %>%
+  rename(scifi = sci,
+         noirfilm = noir,
+         realitytv = reality)
+
+## Linear Regression
+# initial model with all genres
+summary(lm(imDbRating ~ comedy + drama + family + action + romance + adventure + scifi + biography + history + crime + mystery + thriller + fantasy + war + noirfilm + western + musical + horror + music + animation + documentary + sport + game + show + realitytv + news + short + talk, data))
+
+# removed talk, crime, music, mystery, western, horror, game, war, drama, history, news, short, sport, noirfilm, realitytv, musical, show, family, biography, romance (0.07145)
+summary(lm(imDbRating ~ comedy + action + adventure + scifi + thriller + fantasy + animation + documentary, data))
+
+## ANOVA
+# initial model with all genres
+car::Anova(lm(imDbRating ~ comedy + drama + family + action + romance + adventure + scifi + biography + history + crime + mystery + thriller + fantasy + war + noirfilm + western + musical + horror + music + animation + documentary + sport + game + show + realitytv + news + short + talk, data))
+
+# removed talk, crime, mystery, music, war, game, horror, western, drama, history, news, short, sport, noirfilm, realitytv, musical, show, family, biography, romance (0.071405)
+car::Anova(lm(imDbRating ~ comedy + action + adventure + scifi + thriller + fantasy + animation + documentary, data))
+```
+
+
+
+
+

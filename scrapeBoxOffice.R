@@ -8,7 +8,7 @@
 ## ========================================================================== ##
 
 ## read Renviron file
-readRenviron("/Users/danielkwon/Repos/Stats-405-Data-Management/.Renviron")
+#readRenviron("/Users/danielkwon/Repos/Stats-405-Data-Management/.Renviron")    # commenting out--change to the location of your Renviron file to force R reread Renviron instead of starting R session over
 
 ## libraries 
 library(rjson)

@@ -1,24 +1,29 @@
-## author: dylan jorling
+#### ====================================================================== ####
+## Purpose: MOVE SCRAPED JSON DATA TO MYSQL DATABASE
+## Author: Dylan Jorling
+## ========================================================================== ##
 
-### MOVE SCRAPED JSON DATA TO MYSQL DATABASE
+#### ====================================================================== ####
+## Set up parameters
+## ========================================================================== ##
 
+## read Renviron file
+#readRenviron("{INSERT PATH TO R ENVIRON FILE HERE}")                           # commenting out--change to the location of your Renviron file to force R reread Renviron instead of starting R session over
 
+## libraries
 library(RMySQL)
 library(rjson)
 library(readr)
 library(stringr)
 
+## parameters
 xpath_main_data <- Sys.getenv("PATH_MY_MAIN_DATA")
 
-### change path to where your json files located
-xpath_details <-
-        file.path(xpath_main_data, "IMDb_data", "movie_tv_details")
+## change path to where your json files located
+xpath_details <- file.path(xpath_main_data, "imdb_data", "movie_tv_details")
 
-
-### connect to my database
-
+## connect to my database
 drv <- dbDriver("MySQL")
-
 xdbsock <- ""
 xdbuser <- Sys.getenv("MAS405_AWS_MY_DB_ADMIN_USER")
 xpw     <- Sys.getenv("MAS405_AWS_MY_DB_ADMIN_PW")
@@ -41,16 +46,15 @@ dbListTables(con)
 
 dbGetInfo(con)
 
-###########################################
-
-### create details table
+#### ====================================================================== ####
+## Create details table
+## ========================================================================== ##
 
 options(scipen=999)
-
 xtableName_titles <- "imdb_details"
 
 # drop table if need to redo, otherwise can comment out 
-# xx <- dbGetQuery(con, "DROP TABLE imdb_details")
+# xx <- dbGetQuery(con, "DROP TABLE IF EXISTS imdb_details")
 
 xbool.tableExists <- dbExistsTable(con, xtableName_titles) ; xbool.tableExists
 
@@ -88,12 +92,11 @@ if(!xbool.tableExists) {
 }
 
 
-###########################################
-
-### Load data into  sql table
+#### ====================================================================== ####
+## Load data into sql database
+## ========================================================================== ##
 
 file_ls <- list.files(xpath_details)
-
 
 i <- 1
 for(i in 1:length(file_ls)){
@@ -189,8 +192,6 @@ for(i in 1:length(file_ls)){
         }
         
 }
-        
-
 
 yy <- dbGetQuery(con, "SELECT * FROM imdb_details")
 

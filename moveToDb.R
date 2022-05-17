@@ -1,28 +1,38 @@
-## author: andrew mashhadi
+#### ====================================================================== ####
+## Purpose: MOVE SCRAPED JSON DATA TO MYSQL DATABASE
+## Author: Andrew Mashadi
+## ========================================================================== ##
 
-### MOVE SCRAPED JSON DATA TO MYSQL DATABASE
 
+#### ====================================================================== ####
+## Set up parameters
+## ========================================================================== ##
 
+## libraries
 library(RMySQL)
 library(rjson)
 
+## parameters
 xpath_main_data <- Sys.getenv("PATH_MY_MAIN_DATA")
 ximdb_api_key <- Sys.getenv("IMDB_API_KEY")
 
+## define file paths
 xpath_BO <-
-  file.path(xpath_main_data, "IMDb_data", "topBoxOffice", "BoxOfficeAllTime_Movies.json")
+  file.path(xpath_main_data, "imdb_data", "topBoxOffice", "BoxOfficeAllTime_Movies.json")
 
 xpath_t250m <-
-  file.path(xpath_main_data, "IMDb_data", "top250", "top250_Movies.json")
+  file.path(xpath_main_data, "imdb_data", "top250", "top250_Movies.json")
 
 xpath_t250s <-
-  file.path(xpath_main_data, "IMDb_data", "top250", "top250_TVs.json")
+  file.path(xpath_main_data, "imdb_data", "top250", "top250_TVs.json")
 
 xpath_details <-
-  file.path(xpath_main_data, "IMDb_data", "movie_tv_details")
+  file.path(xpath_main_data, "imdb_data", "movie_tv_details")
 
 
-### connect to my database
+#### ====================================================================== ####
+## Connect to my database
+## ========================================================================== ##
 
 drv <- dbDriver("MySQL")
 
@@ -48,8 +58,9 @@ dbListTables(con)
 
 dbGetInfo(con)
 
-#### load top 250 movies to database
-
+#### ====================================================================== ####
+## Load top 250 movies to my database
+## ========================================================================== ##
 
 xtableName_t250m <- "imdb_top250_movies"
 
@@ -125,7 +136,9 @@ for (item in 1:length(tmp_ls)) {
 }
 
 
-### load top 250 shows to database
+#### ====================================================================== ####
+## Load top 250 shows to my database
+## ========================================================================== ##
 
 
 xtableName_t250s <- "imdb_top250_shows"
@@ -201,8 +214,9 @@ for (item in 1:length(tmp_ls)) {
   
 }
 
-### load top 200 box office movies to database
-
+#### ====================================================================== ####
+## Load top 200 box offices to my database
+## ========================================================================== ##
 
 xtableName_BO <- "imdb_boxOffice"
 

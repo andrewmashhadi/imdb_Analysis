@@ -7,29 +7,35 @@
 ## Main
 ## ========================================================================== ##
 
-### FIND INFORMATION FROM TOP 250 AND BOX OFFICE LISTS 
+## read Renviron file
+#readRenviron("{INSERT PATH TO R ENVIRON FILE HERE}")                           # commenting out--change to the location of your Renviron file to force R reread Renviron instead of starting R session over
 
-library(rjson)
-
+## define parameters
 xpath_main_data <- Sys.getenv("PATH_MY_MAIN_DATA")
 ximdb_api_key <- Sys.getenv("IMDB_API_KEY")
 
+# file paths
 xpath_BO <-
-  file.path(xpath_main_data, "IMDb_data", "topBoxOffice", "BoxOfficeAllTime_Movies.json")
+  file.path(xpath_main_data, "imdb_data", "topBoxOffice", "BoxOfficeAllTime_Movies.json")
 
 xpath_t250m <-
-  file.path(xpath_main_data, "IMDb_data", "top250", "top250_Movies.json")
+  file.path(xpath_main_data, "imdb_data", "top250", "top250_Movies.json")
 
 xpath_t250s <-
-  file.path(xpath_main_data, "IMDb_data", "top250", "top250_TVs.json")
+  file.path(xpath_main_data, "imdb_data", "top250", "top250_TVs.json")
 
 xpath_details <-
-  file.path(xpath_main_data, "IMDb_data", "movie_tv_details")
+  file.path(xpath_main_data, "imdb_data", "movie_tv_details")
 
+## libraries
+library(rjson)
+
+## creates folder defined by xpath_scrape_imdb if it does not already exist
 if(!dir.exists(xpath_details)) {
   dir.create(xpath_details, recursive=TRUE)
 }
 
+## main
 ids <- c()
 for (i_fpath in c(xpath_t250m, xpath_t250s, xpath_BO)){
   
@@ -61,17 +67,4 @@ for (i_fpath in c(xpath_t250m, xpath_t250s, xpath_BO)){
     
   }
 
-    
 }
-  
-  
-  
-  
-
-
-
-
-
-
-
-

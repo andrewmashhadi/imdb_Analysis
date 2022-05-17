@@ -8,15 +8,15 @@
 ## ========================================================================== ##
 
 ## read Renviron file
-#readRenviron("/Users/danielkwon/Repos/Stats-405-Data-Management/.Renviron")     # commenting out--change to the location of your Renviron file to force R reread Renviron instead of starting R session over
+#readRenviron("{INSERT PATH TO R ENVIRON FILE HERE}")                           # commenting out--change to the location of your Renviron file to force R reread Renviron instead of starting R session over
+
+## define parameters
+xpath_main_data <- Sys.getenv("PATH_MY_MAIN_DATA")
+ximdb_api_key <- Sys.getenv("IMDB_API_KEY")
+xpath_scrape_imdb <- file.path(xpath_main_data, "imdb_data", "top250")
 
 ## libraries 
 library(rjson)
-
-## define parameters
-xpath_main_data <- Sys.getenv("PATH_MY_FINAL_PROJECT")
-ximdb_api_key <- Sys.getenv("IMDB_API_KEY")
-xpath_scrape_imdb <- file.path(xpath_main_data, "imdb_data", "top250")
 
 ## creates folder defined by xpath_scrape_imdb if it does not already exist
 if(!dir.exists(xpath_scrape_imdb)) {

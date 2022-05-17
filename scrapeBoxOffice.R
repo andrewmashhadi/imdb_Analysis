@@ -8,13 +8,13 @@
 ## ========================================================================== ##
 
 ## read Renviron file
-#readRenviron("/Users/danielkwon/Repos/Stats-405-Data-Management/.Renviron")    # commenting out--change to the location of your Renviron file to force R reread Renviron instead of starting R session over
+readRenviron("/Users/danielkwon/Repos/Stats-405-Data-Management/.Renviron")    # commenting out--change to the location of your Renviron file to force R reread Renviron instead of starting R session over
 
 ## libraries 
 library(rjson)
 
 ## define parameters
-xpath_main_data   <- Sys.getenv("PATH_MY_MAIN_DATA")                            # Sys.getenv("PATH_MY_FINAL_PROJECT") # I used a different r envrion variable name so commenting that out
+xpath_main_data   <- Sys.getenv("PATH_MY_FINAL_PROJECT")                            # Sys.getenv("PATH_MY_FINAL_PROJECT") # I used a different r envrion variable name so commenting that out
 ximdb_api_key     <- Sys.getenv("IMDB_API_KEY")
 xpath_scrape_imdb <- file.path(xpath_main_data, "imdb_data", "top_box_office")
 

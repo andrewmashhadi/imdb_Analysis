@@ -14,7 +14,7 @@ readRenviron("/Users/danielkwon/Repos/Stats-405-Data-Management/.Renviron")     
 library(rjson)
 
 ## define parameters
-xpath_main_data <- Sys.getenv("PATH_MY_MAIN_DATA")
+xpath_main_data <- Sys.getenv("PATH_MY_FINAL_PROJECT")
 ximdb_api_key <- Sys.getenv("IMDB_API_KEY")
 xpath_scrape_imdb <- file.path(xpath_main_data, "imdb_data", "top250")
 

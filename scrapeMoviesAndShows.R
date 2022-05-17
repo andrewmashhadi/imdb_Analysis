@@ -1,5 +1,5 @@
 #### ====================================================================== ####
-## Purpose: this script will pull data for top 2
+## Purpose: {INSERT DESCRIPTION HERE}
 ## Author: Andrew Mashadi
 ## ========================================================================== ##
 
@@ -8,7 +8,7 @@
 ## ========================================================================== ##
 
 ## read Renviron file
-readRenviron("/Users/danielkwon/Repos/Stats-405-Data-Management/.Renviron")     # commenting out--change to the location of your Renviron file to force R reread Renviron instead of starting R session over
+#readRenviron("/Users/danielkwon/Repos/Stats-405-Data-Management/.Renviron")     # commenting out--change to the location of your Renviron file to force R reread Renviron instead of starting R session over
 
 ## libraries 
 library(rjson)

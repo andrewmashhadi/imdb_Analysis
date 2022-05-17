@@ -1,5 +1,5 @@
 #### ====================================================================== ####
-## Purpose: this script will pull data for top 2
+## Purpose: {INSERT DESCRIPTION HERE}
 ## Author: Andrew Mashadi
 ## ========================================================================== ##
 

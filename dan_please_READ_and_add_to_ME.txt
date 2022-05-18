@@ -3,8 +3,10 @@ Two Main Sections
 SECTION (1) 
 
 - Rating prediction grouped by time intervals
-- random forests (see display options in randomForest package ?forgot name?)
+- random forests (see display options in randomForest package ?forgot name?), nnet, lm's, etc.
 - exploratory analysis
+- split genres and other strings for true or false columns before use
+- compare different models predictive values with MSE (K-fold CV) and prediction accuracy
 - ...
 
 

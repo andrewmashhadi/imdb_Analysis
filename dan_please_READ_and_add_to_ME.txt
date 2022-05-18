@@ -1,0 +1,23 @@
+Two Main Sections
+
+SECTION (1) 
+
+- Rating prediction grouped by time intervals
+- random forests (see display options in randomForest package ?forgot name?)
+- exploratory analysis
+- ...
+
+
+SECTION (2) 
+
+- Clustering: description -> labels
+- tf and common words for clusters
+- tf_idf vs tf/stop words
+- clustering within genres
+- clustering within year intervals
+- ...
+
+
+
+NICE ADDITIONS 
+- putting scraped movie images together in a nice shape similar to examples

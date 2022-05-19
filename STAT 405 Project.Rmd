@@ -1,8 +1,8 @@
 ---
 title: "R Notebook"
 output:
-  pdf_document: default
   html_notebook: default
+  pdf_document: default
 ---
 
 <!-- ```{r} -->
@@ -171,7 +171,7 @@ qplot(c(1:4), variance_explained[1:4]) +
 ```
 
 
-## Clustering genres together into 2 groups - maybe the 2 groups represent movies and tv shows
+## Clustering genres together into 2 groups - Not particularly interesting
 ```{r}
 library(topicmodels)
 
@@ -187,13 +187,59 @@ temp <- imdb_details %>%
 library(reshape2)
 lda <- tidy(LDA(temp, k = 2), matrix = "beta")
 
-# getting the top 10 terms for each group 
-top_terms <- lda %>%
+# getting the top 10 genres for each group 
+top_genres <- lda %>%
   group_by(topic) %>%
   slice_max(beta, n = 10) %>% 
   ungroup() %>%
   arrange(topic, -beta)
 
+top_genres %>%
+  mutate(genre = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(beta, genre, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_y_reordered()
+
+# lda %>%
+#   mutate(topic = paste0("topic", term)) %>%
+#   pivot_wider(names_from = topic, values_from = beta) %>% 
+#   filter(topic1 > .001 | topic2 > .001) %>%
+#   mutate(log_ratio = log2(topic2 / topic1)) %>%
+#   ggplot(aes(x = log_ratio, y = reorder(genre, log_ratio))) + geom_bar(stat = "identity")
+```
+
+
+## Keyword - Genre Probabilities
+```{r}
+library(topicmodels)
+
+# tgetting count of words from keyword column
+word_counts <- imdb_details %>%
+  select(X, id, fullTitle, type, year, imDbRating, genres, keywords) %>%
+  unnest_tokens(genre, genres, token = str_split, pattern = ", ") %>%
+  filter(genre %in% c("comedy", "action", "romance", "sci-fi")) %>%
+  unnest_tokens(word, keywords, token = str_split, pattern = ",") %>%
+  anti_join(stop_words) %>%
+  group_by(X, id, fullTitle, type, year, imDbRating, word) %>%
+  summarise(n = n()) %>%
+  arrange(desc(n))
+
+title_dtm <- word_counts %>%
+  cast_dtm(fullTitle, word, n)
+
+# beta is per topic per word probabilities (for each word, the probability of being in that genre)
+library(reshape2)
+lda <- tidy(LDA(title_dtm, k = 4), matrix = "beta")
+
+# getting the top 5 terms for each group 
+top_terms <- lda %>%
+  group_by(topic) %>%
+  slice_max(beta, n = 5) %>% 
+  ungroup() %>%
+  arrange(topic, -beta)
+
+# The four genres vs the words with the highest probability of coming from that genre
 top_terms %>%
   mutate(term = reorder_within(term, beta, topic)) %>%
   ggplot(aes(beta, term, fill = factor(topic))) +
@@ -201,33 +247,109 @@ top_terms %>%
   facet_wrap(~ topic, scales = "free") +
   scale_y_reordered()
 
-lda %>%
-  mutate(topic = paste0("topic", topic)) %>%
-  pivot_wider(names_from = topic, values_from = beta) %>% 
-  filter(topic1 > .001 | topic2 > .001) %>%
-  mutate(log_ratio = log2(topic2 / topic1)) %>%
-  ggplot(aes(x = log_ratio, y = reorder(term, log_ratio))) + geom_bar(stat = "identity")
+# gamma is per document per topic probabilities (the probability that the keywords from that movie/show are generated from that genre)
+genre_gamma <- tidy(LDA(title_dtm, k = 4), matrix = "gamma")
+
+movie_genre <- imdb_details %>% 
+  select(fullTitle, genres) %>%
+  unnest_tokens(genre, genres, token = str_split, pattern = ", ") %>%
+  filter(genre %in% c("comedy", "action", "romance", "sci-fi"))
+
+genre_gamma <- merge(movie_genre, genre_gamma, by.x = "fullTitle", by.y = "document", all = T)
+genre_gamma <- genre_gamma[, c("genre", "fullTitle", "topic", "gamma")]
+
+genre_gamma %>%
+  arrange(topic) %>%
+  ggplot(aes(factor(topic), gamma)) +
+  geom_boxplot() +
+  facet_wrap(~ genre) +
+  labs(x = "topic", y = expression(gamma))
 ```
 
 
-## Clustering keywords together into groups - maybe each group can represent a different genre
+## Plot - Genre Probabilities
 ```{r}
 library(topicmodels)
 
-# turning keywords / phrases from keywords column into dummy variables
-temp <- imdb_details %>%
-  select(X, id, fullTitle, type, year, imDbRating, keywords) %>%
-  unnest_tokens(word, keywords, token = str_split, pattern = ",") %>%
+# getting count of words from plot column
+word_counts <- imdb_details %>%
+  select(X, id, fullTitle, type, year, imDbRating, genres, plot) %>%
+  unnest_tokens(genre, genres, token = str_split, pattern = ", ") %>%
+  filter(genre %in% c("comedy", "action", "romance", "sci-fi")) %>%
+  unnest_tokens(word, plot) %>%
+  anti_join(stop_words) %>%
   group_by(X, id, fullTitle, type, year, imDbRating, word) %>%
   summarise(n = n()) %>%
-  cast_sparse(fullTitle, word, n)
+  arrange(desc(n))
 
-# beta is the probability the genre is generated from 1 of the 2 groups
+title_dtm <- word_counts %>%
+  cast_dtm(fullTitle, word, n)
+
+# beta is per topic per word probabilities (for each word, the probability of being in that genre)
 library(reshape2)
-lda <- tidy(LDA(temp, k = 27), matrix = "beta")
+lda <- tidy(LDA(title_dtm, k = 4), matrix = "beta")
 
 # getting the top 5 terms for each group 
 top_terms <- lda %>%
+  group_by(topic) %>%
+  slice_max(beta, n = 5) %>% 
+  ungroup() %>%
+  arrange(topic, -beta)
+
+# The four genres vs the words with the highest probability of coming from that genre
+top_terms %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(beta, term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_y_reordered()
+
+# gamma is per document per topic probabilities (the probability that the keywords from that movie/show are generated from that genre)
+genre_gamma <- tidy(LDA(title_dtm, k = 4), matrix = "gamma")
+
+movie_genre <- imdb_details %>% 
+  select(fullTitle, genres) %>%
+  unnest_tokens(genre, genres, token = str_split, pattern = ", ") %>%
+  filter(genre %in% c("comedy", "action", "romance", "sci-fi"))
+
+genre_gamma <- merge(movie_genre, genre_gamma, by.x = "fullTitle", by.y = "document", all = T)
+genre_gamma <- genre_gamma[, c("genre", "fullTitle", "topic", "gamma")]
+
+genre_gamma %>%
+  arrange(topic) %>%
+  ggplot(aes(factor(topic), gamma)) +
+  geom_boxplot() +
+  facet_wrap(~ genre) +
+  labs(x = "topic", y = expression(gamma))
+```
+
+
+
+## The Great Library Heist Example
+I'm selecting 4 distinct movies / shows (2 movies, 2 shows) all with different genres and then, I'm going to apply the same methods above / in the example from the online textbook to see if we get similar results
+```{r}
+# Western Horror Comedy Drama; 2 movies and 2 shows
+data <- imdb_details %>%
+  filter(title %in% c("Once Upon a Time in the West", "It", "Parks and Recreation", "Mad Men"))
+
+# Word count from all the plots after removing stop words
+word_counts <- data %>%
+  select(title, plot) %>%
+  unnest_tokens(word, plot) %>%
+  anti_join(stop_words) %>%
+  count(title, word, sort = T)
+
+# Document term matrix
+data_dtm <- word_counts %>%
+  cast_dtm(title, word, n)
+
+data_lda <- LDA(data_dtm, k = 4)
+
+# beta probabilities
+data_topics <- tidy(data_lda, matrix = "beta")
+
+# top terms for each group - there's a lot of ties because there's a lot of unique words
+top_terms <- data_topics %>%
   group_by(topic) %>%
   slice_max(beta, n = 5) %>% 
   ungroup() %>%
@@ -240,27 +362,110 @@ top_terms %>%
   facet_wrap(~ topic, scales = "free") +
   scale_y_reordered()
 
-lda %>%
-  mutate(topic = paste0("topic", topic)) %>%
-  pivot_wider(names_from = topic, values_from = beta) %>% 
-  filter(topic1 > .001 | topic2 > .001) %>%
-  mutate(log_ratio = log2(topic2 / topic1)) %>%
-  ggplot(aes(x = log_ratio, y = reorder(term, log_ratio))) + geom_bar(stat = "identity")
+data_gamma <- tidy(data_lda, matrix = "gamma")
+data_gamma
 
-
-# genre_gamma <- tidy(LDA(temp, k = 27), matrix = "gamma")
-# 
-# genre_gamma %>%
-#   mutate(document = reorder(document, gamma * topic)) %>%
-#   ggplot(aes(factor(topic), gamma)) +
-#   geom_boxplot() +
-#   facet_wrap(~ document) +
-#   labs(x = "topic", y = expression(gamma))
+data_gamma %>%
+  mutate(document = reorder(document, gamma * topic)) %>%
+  ggplot(aes(factor(topic), gamma)) +
+  geom_boxplot() +
+  facet_wrap(~ document) +
+  labs(x = "topic", y = expression(gamma))
 ```
 
 
+## Max Gamma Value for Each Movie / Show - still needs work
+```{r}
+# Word count from all the plots after removing stop words
+word_counts <- imdb_details %>%
+  select(title, plot) %>%
+  unnest_tokens(word, plot) %>%
+  anti_join(stop_words) %>%
+  count(title, word, sort = T)
+
+# Document term matrix
+data_dtm <- word_counts %>%
+  cast_dtm(title, word, n)
+
+data_lda <- LDA(data_dtm, k = 4)
+
+data_gamma <- tidy(data_lda, matrix = "gamma")
+
+# getting each movie's max gamma so that each movie/show has one predicted topic / group number (1,2,3,4)
+data_max_gamma <- data_gamma %>%
+  group_by(document) %>%
+  filter(gamma == max(gamma))
+
+# all the movies/shows in each group 
+data_max_gamma %>%
+  ggplot(aes(topic, gamma, label = document)) +
+  facet_wrap(~ topic) +
+  geom_text() + xlim(-25, 25)
+
+merge(data_max_gamma, word_counts, by.x = "document", by.y = "title", all.x = T) %>%
+  select(-document) %>%
+  group_by(topic) %>%
+  slice_max(n, n = 5) %>%
+  distinct(word, n) %>%
+  mutate(word = reorder_within(word, n, topic)) %>%
+  ggplot(aes(n, word, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_y_reordered()
+```
+
+## KMeans Clustering
+```{r}
+library(factoextra)
+library(cluster)
+
+data <- imdb_details %>%
+  select(fullTitle, year, runtime, imDbRating, budget, grossUSA, grossWorldwide, metacriticRating) %>%
+  drop_na()
+
+rownames(data) <- data$fullTitle
+data <- data %>%
+  select(-fullTitle) %>%
+  scale()
+
+fviz_nbclust(data, kmeans, method = "wss") # ideal number of clusters is 10
+
+# calculate gap statistic based on number of clusters
+gap_stat <- clusGap(data,
+                    FUN = kmeans,
+                    nstart = 25,
+                    K.max = 10,
+                    B = 50)
+
+# plot number of clusters vs. gap statistic
+fviz_gap_stat(gap_stat)
+
+km <- kmeans(data, centers = 10, nstart = 25)
+fviz_cluster(km, data)
+```
 
 
+## K-Nearest Neighbor for Movie / Show Recommendation
+```{r}
+ten_nearest_neighbors <- function(data, fullTitleName) {
+  temp <- data
+  temp[, -1] <- scale(temp[, -1])
+  X <- temp %>%
+    filter(fullTitle == fullTitleName)
+  
+  distance <- sqrt((temp$year - X$year)^2 + (temp$runtime - X$runtime)^2 + (temp$imDbRating - X$imDbRating)^2 + (temp$budget - X$budget)^2 + (temp$grossUSA - X$grossUSA)^2 + (temp$grossWorldwide - temp$grossWorldwide)^2 + (temp$metacriticRating - X$metacriticRating)^2)
+  
+  data$distance <- distance
+  
+  return(data %>% arrange(distance) %>% head(10))
+}
 
+data <- imdb_details %>%
+  select(fullTitle, year, runtime, imDbRating, budget, grossUSA, grossWorldwide, metacriticRating) %>%
+  drop_na()
+
+
+ten_nearest_neighbors(data, "Metropolis (1927)")
+```
 
 

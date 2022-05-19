@@ -1,8 +1,9 @@
 ## Data Collection:
 * scrape top 250 shows, top 250 movies, and top 200 box-office movies from imdb-api
 * use the unique movies to scrape more details about each movie or show
+* scraped more IDs from imdb website and then use those IDs in the imdb-api
 * place all JSON data locally
-* store the top 250 lists, the box-office list, and the details about each movie show in four seperate tables on AWS DB (currently on Andrew's DB)
+* store the top 250 lists, the box-office list, and the details about each movie or show in four seperate tables on AWS DB (currently on Andrew's DB)
 
 
 

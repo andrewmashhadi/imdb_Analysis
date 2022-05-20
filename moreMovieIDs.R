@@ -123,9 +123,8 @@ ids <- as.character(lapply(lapply(lapply(xlt, strsplit, "_"), "[[", 1), "[", 1))
 
 movie_data <- fromJSON(readLines(file.path("imdb_data", "movies_by_genre", "movies_by_genre.json")))
 
-# not length(movie_data) here bc 5k limit for api (need to run 6-length(movie_data))
 k <- 0
-for (genre in 6:11){
+for (genre in 1:length(movie_data)){
     
     g_df <- as.data.frame(movie_data[[genre]])
     
@@ -151,7 +150,7 @@ for (genre in 6:11){
             xbool_keep_going <- FALSE
             cat("Got details for ", title, "\n")
             ids <- c(ids, id)
-            Sys.sleep(1)
+            #Sys.sleep(1)
         }
     }
     

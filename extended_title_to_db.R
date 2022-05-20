@@ -98,7 +98,7 @@ if(!xbool.tableExists) {
 
 file_ls <- list.files(xpath_details)
 
-for(i in 4400:length(file_ls)){
+for(i in 1:length(file_ls)){
         
         xthis_fn <- file_ls[i] ; xthis_fn
         

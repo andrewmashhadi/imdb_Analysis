@@ -98,12 +98,13 @@ if(!xbool.tableExists) {
 
 file_ls <- list.files(xpath_details)
 
-for(i in 1:length(file_ls)){
+for(i in 4400:length(file_ls)){
         
         xthis_fn <- file_ls[i] ; xthis_fn
         
         #load data
-        x_ls <- fromJSON( file=file.path(xpath_details, xthis_fn))
+        x_ls <- try(fromJSON( file=file.path(xpath_details, xthis_fn)), silent = T)
+        if( "try-error" %in% class(x_ls) ) { next }
         
         if (is.null(x_ls$title)) { next }
         

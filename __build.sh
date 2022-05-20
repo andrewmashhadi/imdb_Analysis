@@ -8,6 +8,8 @@ xname='_imdb-analysis'
 Rscript scrapeMoviesAndShows.R
 Rscript scrapeBoxOffice.R
 Rscript findMovieAndShowsDetails.R
+Rscript scrapeMoviePosters.R
+Rscript createPosterArray.R
 Rscript Title_to_db.R
 Rscript moveToDb.R
 

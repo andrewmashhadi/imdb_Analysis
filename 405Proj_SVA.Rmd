@@ -1,0 +1,91 @@
+---
+title: "Stats 405 Project"
+author: "Sofia Alcazar"
+date: "5/20/2022"
+output: pdf_document
+---
+```{r}
+library(tidyverse)
+imdb_boxOffice <- read.csv("/Users/sofiaalcazar/Desktop/Stats 405/imdb_Analysis/imdb_data/imdb_boxOffice.csv")
+imdb_details <- read.csv("/Users/sofiaalcazar/Desktop/Stats 405/imdb_Analysis/imdb_data/imdb_details.csv")
+imdb_top250_movies <- read.csv("/Users/sofiaalcazar/Desktop/Stats 405/imdb_Analysis/imdb_data/imdb_top250_movies.csv")
+imdb_top250_shows <- read.csv("/Users/sofiaalcazar/Desktop/Stats 405/imdb_Analysis/imdb_data/imdb_top250_shows.csv")
+```
+
+# K Modes Categorical
+```{r}
+library(car)
+library(factoextra)
+library(cluster)
+library(tm)
+library(tidytext)
+
+temp <- imdb_details %>%
+  dplyr::select(X, fullTitle, type, rating, genres) %>%
+  unnest_tokens(word, genres, token = str_split, pattern = ", ") %>%
+  drop_na()
+
+data = as.data.frame(unclass(temp), stringsAsFactors = TRUE)
+names(data)[5] = "genre"
+# action and adventure seems like an easy grouping
+levels(data$genre)[levels(data$genre) == "adventure"] = "action"
+data <- data %>%
+  dplyr::select(-fullTitle)
+
+# this package masks select function
+library(klaR)
+
+fviz_nbclust(data, kmodes, method = "wss") # optimal num of clusters=2??
+
+set.seed(123)
+k.max <- 15
+wss <- sapply(1:k.max, 
+              function(k){sum(kmodes(data[, 2:4], k,iter.max = 15 )$withindiff^2)})
+
+plot(1:k.max, wss,
+     type="b", pch = 19, frame = FALSE, 
+     xlab="Number of clusters K",
+     ylab="Total within-clusters sum of squares")
+# maybe 2
+
+cl = kmodes(data[,2:4], modes = 2)
+
+plot(data[, 3:4], col = cl$cluster)
+points(cl$modes, col = 1:5, pch = 8)
+```
+
+# K Modes using Numeric and Categorical
+```{r}
+temp <- imdb_details %>%
+  dplyr::select(fullTitle, year, runtime, imDbRating, budget, grossUSA, grossWorldwide, metacriticRating, type, rating, genres) %>%
+  unnest_regex(word, genres, pattern = "(.+?),") %>%
+  drop_na()
+names(temp)[11] = "genre"
+
+data = as.data.frame(unclass(temp), stringsAsFactors = TRUE)
+rownames(data) <- data$fullTitle
+scale(data[, 2:8])
+
+fviz_nbclust(data, kmodes, method = "wss") # maybe 3?
+
+k.max <- 10
+wss <- sapply(1:k.max, 
+              function(k){sum(kmodes(data[,9:11], k)$withindiff^2)})
+
+plot(1:k.max, wss,
+     type="b", pch = 19, frame = FALSE, 
+     xlab="Number of clusters K",
+     ylab="Total within-clusters sum of squares")
+# maybe 4?
+
+
+kmo = kmodes(data[, 9:11], modes = 3)
+# playing around with witch numeric fields to look at
+plot(data[, c(4, 7)], col = kmo$cluster)
+#points(kmo$modes, col = 1:5, pch = 8)
+# need a legend
+
+# mainly doing pairwise comparisons
+kmo = kmodes(data[, 9:11], modes = 4)
+plot(data[, c(4, 7)], col = kmo$cluster)
+```

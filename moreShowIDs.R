@@ -115,7 +115,7 @@ for (genre in 1:length(show_data)){
     
     g_df <- as.data.frame(show_data[[genre]])
     
-    for (i in 1:min(400, nrow(g_df))) {
+    for (i in 1:nrow(g_df)) {
         
         id <- g_df$ID[i]
         title <- g_df$Name[i]

@@ -1,0 +1,235 @@
+---
+title: 'Unsupervised Learning: Movie/Show Recommendation'
+author: "Ajay Patel"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+The ultimate goal for the unsupervised learning portion of the project is to make a movie/show recommendation system based on clustering and KNN. This means I did not use TF IDF or the Beta & Gamma probabilities (Topic Modeling) from the previous notebook. They are not particularly useful for our data. On this website, https://www.tidytextmining.com/topicmodeling.html, it states "topic modeling is a method for unsupervised classification of such documents, similar to clustering on numeric data, which finds natural groups of items even when we’re not sure what we’re looking for." In their examples, they used few documents (4 books) and lots of words (the words from all 4 books), making their clustering easy and more interpretable. In our case, we have lots of documents (movies / shows) and are limited to few words (plot summary), making it harder to extract meaning from the clusters or "topics."  
+
+Here, I started with KModes clustering on the categorical features of the imdb_details dataset. The KModes cluster assignment was used as a feature in the KMeans clustering along with the other numerical features in the imdb_details datset. After I obtained the KMeans clustering cluster assignments, I included plots exploring the most common words from the plots per cluster, the most common keywords per cluster, the most common genres per cluster, and the highest rated movies/shows per cluster. 
+
+The KMeans cluster assignment fed into the KNN along with the numerical features so that when given a title from the imdb_details dataset, the KNN function returns the 10 nearest neighbors from the same cluster. 
+
+## Reading in the data
+```{r}
+library(tidyverse)
+library(tm)
+library(tidytext)
+library(factoextra)
+library(cluster)
+# this package masks select function
+library(klaR)
+library(ggpubr)
+
+imdb_boxOffice <- read.csv("/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_boxOffice.csv")
+imdb_details <- read.csv("/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_details.csv")
+imdb_top250_movies <- read.csv("/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_top250_movies.csv")
+imdb_top250_shows <- read.csv("/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_top250_shows.csv")
+```
+
+
+## KModes Clustering
+```{r}
+data <- imdb_details
+`%notin%` <- Negate(`%in%`)
+
+# Cleaning language variable - some levels had small counts
+data$languages[data$languages == "English, None"] <- "English"
+data$languages[data$languages == "None, English"] <- "English"
+data$languages[data$languages == "None, French"] <- "French"
+data$languages[grepl(",", data$languages) == T] <- "Multilingual"
+data$languages[data$languages == ""] <- "None"
+
+data$languages[data$languages %notin% c("English", "Multilingual")] <- "Other"
+
+# Each show/movie has one genre of the 2+ genres listed, so I'm randomly picking 1 genre
+set.seed(123)
+genre <- c()
+for (i in 1:673) {
+  num_genres <- length(strsplit(imdb_details$genres, ", ")[[i]])
+  random_genre_idx <- sample(1:num_genres, 1)
+  genre[i] <- strsplit(imdb_details$genres, ", ")[[i]][random_genre_idx]
+}
+
+# Cleaning genre - some genres had low counts
+data$genre <- genre
+data$genre[data$genre %notin% c("Action", "Adventure", "Animation", "Comedy", "Crime", "Drama", "Sci-Fi", "Thriller")] <- "Other"
+
+# Cleaning rating
+data$rating[data$rating %notin% c("PG", "PG-13", "R", "TV-14", "TV-MA", "TV-PG")] <- "Other"
+
+# KModes clustering
+data <- data %>%
+  dplyr::select(X, type, rating, genre, languages)
+
+fviz_nbclust(data, kmodes, method = "wss") # optimal number of clusters is 3
+set.seed(123)
+k.max <- 15
+wss <- sapply(1:k.max, 
+              function(k){sum(kmodes(data[, 2:5], k, iter.max = 15)$withindiff^2)})
+
+plot(1:k.max, wss,
+     type = "b", pch = 19, frame = FALSE, 
+     xlab = "Number of clusters K",
+     ylab = "Total within-clusters sum of squares")
+
+# Optimal number of clusters is 3
+cl <- kmodes(data[, 2:5], modes = 3)
+data$cluster <- cl$cluster # attaching the cluster number to the data
+
+# Plots
+g1 <- ggplot(data, aes(factor(cluster), fill = factor(type))) + geom_bar(position = "fill") + xlab("KModes Cluster") + ylab("Proportion") + guides(fill = guide_legend(title = "Movie or Show"))
+
+g2 <- ggplot(data, aes(factor(cluster), fill = factor(genre))) + geom_bar(position = "fill") + xlab("KModes Cluster") + ylab("Proportion") + guides(fill = guide_legend(title = "Genre"))
+
+g3 <- ggplot(data, aes(factor(cluster), fill = factor(rating))) + geom_bar(position = "fill") + xlab("KModes Cluster") + ylab("Proportion") + guides(fill = guide_legend(title = "Rating"))
+
+g4 <- ggplot(data, aes(factor(cluster), fill = factor(languages))) + geom_bar(position = "fill") + xlab("KModes Cluster") + ylab("Proportion") + guides(fill = guide_legend(title = "Language"))
+
+ggarrange(g1, g2, g3, g4, ncol = 2, nrow = 2)
+```
+
+
+## KMeans Clustering
+```{r}
+# Attaching the KModes cluster assignment to original data
+imdb_details$kmodes_cluster <- data$cluster
+
+data <- imdb_details %>%
+  dplyr::select(fullTitle, year, runtime, imDbRating, budget, grossUSA, grossWorldwide, metacriticRating, kmodes_cluster)
+
+# Filling NA's in each column with the column mean
+for(i in 1:ncol(data)) {
+  data[is.na(data[,i]), i] <- mean(data[,i], na.rm = TRUE)
+}
+
+rownames(data) <- data$fullTitle
+data <- data %>%
+  dplyr::select(-fullTitle) %>%
+  scale()
+
+# Assessing how many clusters we need
+fviz_nbclust(data, kmeans, method = "wss") # ideal number of clusters is 6
+
+# Clustering algorithm and visualizing the clusters
+set.seed(123)
+km <- kmeans(data, centers = 6)
+fviz_cluster(km, data)
+
+## Plots
+# Attaching the cluster number to original data
+cluster <- data.frame(km$cluster)
+cluster$fullTitle <- rownames(cluster)
+
+data <- merge(imdb_details, cluster, by = "fullTitle") %>%
+  dplyr::select(X, id, title, type, year, imDbRating, genres, plot, keywords, km.cluster)
+
+# Most common words from plot per cluster
+data %>%
+  unnest_tokens(word, plot) %>%
+  anti_join(stop_words) %>%
+  count(km.cluster, word, sort = T) %>%
+  group_by(km.cluster) %>%
+  slice_max(order_by = n, n = 4) %>%
+  mutate(word = reorder_within(word, n, km.cluster)) %>%
+  ggplot(aes(n, word, fill = factor(km.cluster))) + 
+  geom_col(show.legend = F) + 
+  facet_wrap(~ km.cluster, scales = "free_y") + 
+  scale_y_reordered() +
+  ggtitle("Most Common Words From Plots Per Cluster")
+
+# Most common genres per cluster
+data %>%
+  unnest_tokens(word, genres, token = str_split, pattern = ", ") %>%
+  anti_join(stop_words) %>%
+  count(km.cluster, word, sort = T) %>%
+  group_by(km.cluster) %>%
+  slice_max(order_by = n, n = 4) %>%
+  mutate(word = reorder_within(word, n, km.cluster)) %>%
+  ggplot(aes(n, word, fill = factor(km.cluster))) + 
+  geom_col(show.legend = F) + 
+  facet_wrap(~ km.cluster, scales = "free_y") + 
+  scale_y_reordered() +
+  ylab("genre") +
+  ggtitle("Most Common Genres Per Cluster")
+
+# Most common keywords per cluster
+data %>%
+  unnest_tokens(word, keywords, token = str_split, pattern = ",") %>%
+  anti_join(stop_words) %>%
+  count(km.cluster, word, sort = T) %>%
+  group_by(km.cluster) %>%
+  slice_max(order_by = n, n = 3) %>%
+  mutate(word = reorder_within(word, n, km.cluster)) %>%
+  ggplot(aes(n, word, fill = factor(km.cluster))) + 
+  geom_col(show.legend = F) + 
+  facet_wrap(~ km.cluster, scales = "free_y") + 
+  scale_y_reordered() +
+  ylab("keywords") +
+  ggtitle("Most Common Keywords Per Cluster")
+
+# Top 4 highest rated movies/shows per cluster
+data %>%
+  group_by(km.cluster) %>%
+  slice_max(order_by = imDbRating, n = 4) %>%
+  mutate(title = reorder_within(title, imDbRating, km.cluster)) %>%
+  ggplot(aes(x = imDbRating, y = title, fill = factor(km.cluster))) + 
+  geom_col(show.legend = F) +
+  facet_wrap(~ km.cluster, scales = "free") + 
+  scale_y_reordered() +
+  ggtitle("Highest Rated Movies & Shows Per Cluster")
+
+# Tried to make a word cloud with the titles, but some of the titles are too long
+# library(ggwordcloud)
+# data %>%
+#   filter(km.cluster == 2) %>%
+#   mutate(title_new = str_sub(title, start = 1, end = 10)) %>%
+#   ggplot(aes(label = title_new)) +
+#   geom_text_wordcloud() +
+#   scale_size_area(max_size = 5) +
+#   theme_minimal()
+# 
+# library(wordcloud)
+# wordcloud(words = (data %>% filter(km.cluster == 1))$title,
+#           random.order=FALSE, rot.per=0.35)
+```
+
+
+## K-Nearest Neighbor for Movie / Show Recommendation
+```{r}
+ten_nearest_neighbors <- function(data, fullTitleName) {
+  temp <- data
+  
+  # getting the cluster the movie/show is in 
+  cluster <- (temp %>%
+    filter(fullTitle == fullTitleName))$km.cluster
+  
+  temp[, -1] <- scale(temp[, -1])
+  X <- temp %>%
+    filter(fullTitle == fullTitleName)
+  
+  # euclidean distance for KNN
+  distance <- sqrt((temp$year - X$year)^2 + (temp$runtime - X$runtime)^2 + (temp$imDbRating - X$imDbRating)^2 + (temp$budget - X$budget)^2 + (temp$grossUSA - X$grossUSA)^2 + (temp$grossWorldwide - temp$grossWorldwide)^2 + (temp$metacriticRating - X$metacriticRating)^2)
+  
+  data$distance <- distance
+  
+  # constrains the recommendations to be in the same cluster
+  return(data %>% filter(km.cluster == cluster)%>% arrange(distance) %>% head(10))
+}
+
+
+data <- merge(imdb_details, cluster, by = "fullTitle") %>%
+  dplyr::select(fullTitle, year, runtime, imDbRating, budget, grossUSA, grossWorldwide, metacriticRating, km.cluster)
+
+# Filling NA's in each column with the column mean
+for(i in 1:ncol(data)) {
+  data[is.na(data[,i]), i] <- mean(data[,i], na.rm = TRUE)
+}
+
+ten_nearest_neighbors(data, "Avengers: Endgame (2019)")
+```
+
+
+

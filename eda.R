@@ -55,12 +55,17 @@ con            <- dbConnect(drv,
 
 #### read data from andrew's database
 df_imdb_details <- dbGetQuery(con, "select * from imdb_details_extd") %>% as_tibble()
+df_imdb_details <- df_imdb_details %>% mutate(metacriticRatingBinned = cut(metacriticRating, breaks=5))
+df_imdb_details <- df_imdb_details %>% mutate(grossUSABinned = cut(grossUSA, breaks=10))
+df_imdb_details <- df_imdb_details %>% mutate(yearBinned = cut(year, breaks=50))
 df_imdb_details_movies_only   <- df_imdb_details %>% filter(type == "Movie")
 df_imdb_details_tvseries_only <- df_imdb_details %>% filter(type == "TVSeries")
 
-#### histogram of numeric variables
-names(df_imdb_details)
+#### top n directors
+top_directors <- df_imdb_details_movies_only %>% group_by(directors) %>% summarize(n = n()) %>% arrange(desc(n)) %>% top_n(25)
+df_imdb_details_movies_top_directors_only <- df_imdb_details_movies_only %>% filter(directors %in% top_directors[[1]])
 
+#### histogram of numeric variables
 for (i in names(df_imdb_details_movies_only)) {
   var_type <- class(df_imdb_details[[i]])
   if (var_type %in% c("numeric", "integer")) {
@@ -79,3 +84,34 @@ for (i in names(df_imdb_details_movies_only)) {
     print(paste0("skipping ", i, " because it is not numeric"))
   }
 }
+
+#### box plots
+names(df_imdb_details_movies_only)
+
+boxplot_output <- ggplot(df_imdb_details_movies_only, aes_string(x="metacriticRatingBinned", y="grossWorldwide")) +
+  geom_boxplot() +
+  ggtitle('TBD') 
+print(boxplot_output)
+
+boxplot_output <- ggplot(df_imdb_details_movies_only, aes_string(x="metacriticRatingBinned", y="runtime")) +
+  geom_boxplot() +
+  ggtitle('TBD') 
+print(boxplot_output)
+
+boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(between(year, 1990, 2000)), aes_string(x="metacriticRatingBinned", y="runtime")) +
+  geom_boxplot() +
+  ggtitle('TBD') 
+print(boxplot_output)
+
+boxplot_output <- ggplot(df_imdb_details_movies_top_directors_only, aes_string(x="directors", y="metacriticRating")) +
+  geom_boxplot() +
+  ggtitle('TBD') 
+print(boxplot_output)
+
+#### scatterplots
+ggplot(df_imdb_details_movies_only %>% filter(year > 1960), aes(x=year, y=runtime, shape=metacriticRatingBinned, color=metacriticRatingBinned)) +
+  geom_point()
+
+ggplot(df_imdb_details_movies_top_directors_only, 
+       aes(x=year, y=runtime, shape=directors, color=directors)) +
+  geom_point()

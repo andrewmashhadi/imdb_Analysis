@@ -108,8 +108,11 @@ boxplot_output <- ggplot(df_imdb_details_movies_top_directors_only, aes_string(x
   ggtitle('TBD') 
 print(boxplot_output)
 
+## for stars and writers
+##
+
 #### scatterplots
-ggplot(df_imdb_details_movies_only %>% filter(year > 1960), aes(x=year, y=runtime, shape=metacriticRatingBinned, color=metacriticRatingBinned)) +
+ggplot(df_imdb_details_movies_only %>% filter(year > 2010), aes(x=year, y=runtime, shape=metacriticRatingBinned, color=metacriticRatingBinned)) +
   geom_point()
 
 ggplot(df_imdb_details_movies_top_directors_only, 

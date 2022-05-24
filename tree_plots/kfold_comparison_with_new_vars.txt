@@ -1,0 +1,11 @@
+> ## compare k-fold MSEs between rf before and after adding dylans vars, a linear model, and 
+> ## single pruned tree
+> mean(rf1_errors)
+[1] 0.4830987
+> mean(rf2_errors)
+[1] 0.2746156
+> mean(lm_errors)
+[1] 0.5668713
+> mean(pt_errors)
+[1] 0.6065047
+> ## we can see the random forest with dylans variables does the best!

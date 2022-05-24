@@ -1,5 +1,0 @@
-> ## compare errors
-> mean(rf_errors)
-[1] 0.4765269
-> mean(pt_errors)
-[1] 0.7624966

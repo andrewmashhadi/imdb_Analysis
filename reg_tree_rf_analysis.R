@@ -1,20 +1,20 @@
-## using regression trees, random forest, or boosting, to predict imdbrating from 
+## using regression trees, random forest, or boosting, to predict imdbrating from
 ## budget, runtime, year, type, rating
 
 
 ## connect to db with imdb data
 
 # library(RMySQL)
-# 
+#
 # drv <- dbDriver("MySQL")
-# 
+#
 # xdbsock <- ""
 # xdbuser <- Sys.getenv("MAS405_AWS_MY_DB_ADMIN_USER")
 # xpw     <- Sys.getenv("MAS405_AWS_MY_DB_ADMIN_PW")
 # xdbname <- Sys.getenv("MAS405_AWS_MY_DB_ADMIN_DBNAME")
 # xdbhost <- Sys.getenv("MAS405_AWS_MY_DB_ADMIN_HOST")
 # xdbport <- as.integer( Sys.getenv("MAS405_AWS_MY_DB_ADMIN_PORT") )
-# 
+#
 # con <-
 #   dbConnect(
 #     drv,
@@ -25,20 +25,20 @@
 #     port=xdbport,
 #     unix.sock=xdbsock
 #   )
-# 
+#
 # dbListTables(con)
-# 
+#
 # dbGetInfo(con)
-# 
+#
 # imdb_boxOffice <- dbGetQuery(con, "SELECT * FROM imdb_boxOffice")
 # imdb_details <- dbGetQuery(con, "SELECT * FROM imdb_details")
 # imdb_details_extd <- dbGetQuery(con, "SELECT * FROM imdb_details_extd")
 # imdb_top250_movies <- dbGetQuery(con, "SELECT * FROM imdb_top250_movies")
 # imdb_top250_shows <- dbGetQuery(con, "SELECT * FROM imdb_top250_shows")
-# 
+#
 # dbDisconnect(con)
-# 
-# 
+#
+#
 ### store locally to save me $$$
 #
 # write.csv(imdb_boxOffice, "C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_boxOffice.csv")
@@ -46,14 +46,17 @@
 # write.csv(imdb_details_extd, "C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_details_extd.csv")
 # write.csv(imdb_top250_movies, "C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_top250_movies.csv")
 # write.csv(imdb_top250_shows, "C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_top250_shows.csv")
-# 
-# 
+#
+#
 
 imdb_boxOffice <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_boxOffice.csv")
 imdb_details <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_details.csv")
 imdb_top250_movies <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_top250_movies.csv")
 imdb_top250_shows <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_top250_shows.csv")
 imdb_details_extd <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_details_extd.csv")
+imdb_details_extd2 <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_details_extd2.csv")
+colnames(imdb_details_extd2)[25:28] <- c("oscar_nom", "award_wins", "dir_pop_fac", "co_size")
+imdb_details_extd2$award_wins <- log(imdb_details_extd2$award_wins + 1)
 
 library(tidyverse)
 
@@ -65,8 +68,9 @@ library(partykit)
 ## imdb_details_extd <- filter(imdb_details_extd, type == "Movie") ## ONLY MOVIES
 ## imdb_details_extd <- filter(imdb_details_extd, type == "TVSeries") ## SHOWs ONLY
 
+
 ## print variables
-names(imdb_details)
+names(imdb_details_extd)
 
 ## simple single tree
 tr <- rpart(imDbRating ~ budget+runtime+year+rating, data = imdb_details_extd)
@@ -106,15 +110,33 @@ plotcp(tr)
 plot(as.party(tr), tp_args = list(id = FALSE))
 
 
+####### USING PRUNED TREE WITH DYLANS ADDITIONAL VARS ########
+
+## print variables
+names(imdb_details_extd2)
+
+## simple single tree
+tr <- rpart(imDbRating ~ budget+runtime+year+rating+oscar_nom+award_wins+dir_pop_fac+co_size, data = imdb_details_extd2)
+
+## print plot to help choose cp
+plotcp(tr)
+
+## prune the tree
+tr_2 <- prune(tr, cp = 0.017)
+print(tr_2)
+
+
+## plot the pruned tree
+plot(as.party(tr_2), tp_args = list(id = FALSE))
+
+
 
 #######  USING RANDOM FOREST ########
 
 library(randomForest)
 imdb_rf = randomForest(imDbRating ~ budget+runtime+year+rating, data = imdb_details_extd, mtry = 3, na.action = na.omit)
 
-
 ### COMPARING ERRORs
-
 samp <- sample(5090)
 rf_errors <- matrix(0, nrow=1, ncol=10)
 pt_errors <- matrix(0, nrow=1, ncol=10)
@@ -142,8 +164,7 @@ mean(rf_errors)
 mean(pt_errors)
 
 
-
-###### PREDICTION ACCRUACY #####
+## obtain prediction accuracy
 imdb_details_no_NA <- na.omit(imdb_details_extd)
 imdb_rf = randomForest(imDbRating ~ budget+runtime+year+rating, data = imdb_details_no_NA, mtry = 3)
 
@@ -175,15 +196,83 @@ x <- seq(from=0,to=1,by=0.01)
 plot(x, sapply(x, close_enoughs), main="test accuracy", xlab="deviation tolerance", ylab="test data accuracy")
 
 
-### try using genre too
+########## USING RANDOM FOREST WITH DYLANS ADDITIONAL VARS ###########
 
-## first make sure the genres are all in the same order
-tt <-lapply(lapply(imdb_details_extd[, "genres"], strsplit, ", "), unlist)
-tt <- lapply(tt, sort)
-tt <- lapply(tt, paste, collapse=", ")
-imdb_details_extd[, "genres"] <- unlist(tt)
+library(randomForest)
+imdb_rf = randomForest(imDbRating ~ budget+runtime+year+rating+oscar_nom+award_wins+dir_pop_fac+co_size, 
+                       data = imdb_details_extd2, 
+                       mtry = 3, 
+                       na.action = na.omit)
 
-imdb_rf = randomForest(imDbRating ~ budget+runtime+genres+year+rating, data = train, mtry = 3)
+### COMPARING ERRORs
+samp <- sample(5090)
+rf1_errors <- matrix(0, nrow=1, ncol=10)
+rf2_errors <- matrix(0, nrow=1, ncol=10)
+lm_errors <- matrix(0, nrow=1, ncol=10)
+pt_errors <- matrix(0, nrow=1, ncol=10)
+for(k in 1:10){
+  from <- 1 + (k-1)*509
+  to <- 509*k # we will lose the last 8 observations
+  test <- na.omit(imdb_details_extd2[samp[from:to],])
+  train <- imdb_details_extd2[samp[-(from:to)],]
+  
+  ## rf
+  
+  imdb_rf <- randomForest(imDbRating ~ budget+runtime+year+rating, data = imdb_details_extd2, 
+                          mtry = 3, 
+                          na.action = na.omit)
+  
+  imdb_rf2 <- randomForest(imDbRating ~ budget+runtime+year+rating+oscar_nom+award_wins+dir_pop_fac+co_size, 
+                          data = imdb_details_extd2, 
+                          mtry = 3, 
+                          na.action = na.omit)
+  
+  imdb_lm <- lm(imDbRating ~ budget+runtime+year+rating+oscar_nom+award_wins+dir_pop_fac+co_size, 
+                data = imdb_details_extd2, 
+                na.action = na.omit)
+  
+  ## pruned tree
+  tr <- rpart(imDbRating ~ budget+runtime+year+rating+oscar_nom+award_wins+dir_pop_fac+co_size,
+              data = imdb_details_extd2)
+  pt <- prune(tr, cp = 0.018)
+  
+  ## calc errors
+  rf1_errors[k] <- mean((test$imDbRating - predict(imdb_rf, test))^2 ) 
+  rf2_errors[k] <- mean((test$imDbRating - predict(imdb_rf2, test))^2 )
+  lm_errors[k] <- mean((test$imDbRating - predict(imdb_lm, test))^2)
+  pt_errors[k] <- mean((test$imDbRating - predict(pt, test))^2) 
+}
+
+
+## compare errors
+mean(rf1_errors)
+mean(rf2_errors)
+mean(lm_errors)
+mean(pt_errors)
+
+
+## obtain prediction accuracy
+imdb_details_no_NA <- na.omit(imdb_details_extd2)
+imdb_rf = randomForest(imDbRating ~ budget+runtime+year+rating+oscar_nom+award_wins+dir_pop_fac+co_size, data = imdb_details_no_NA, 
+                       mtry = 3)
+
+## compare the predictions to the data 
+tr_comp <- data.frame(imDbRating=imdb_details_no_NA$imDbRating, predictedRating=predict(imdb_rf, imdb_details_no_NA))
+
+## approximate training accuracy
+
+devs <- abs(tr_comp$imDbRating - tr_comp$predictedRating)
+close_enoughs <- function(x) sum(devs <= x)/ length(devs)
+x <- seq(from=0,to=1,by=0.01)
+plot(x, sapply(x, close_enoughs), main="training accuracy with new vars", xlab="deviation tolerance", ylab="training data accuracy")
+
+## approximate test accuracy
+
+samp <- sample(5098)
+train <- na.omit(imdb_details_extd2[samp(1:4000), ])
+test  <- na.omit(imdb_details_extd2[samp(4001:5098), ])
+
+imdb_rf = randomForest(imDbRating ~ budget+runtime+year+rating, data = train, mtry = 3)
 
 ## compare the predictions to the data 
 comp <- data.frame(imDbRating=test$imDbRating, predictedRating=predict(imdb_rf, test))
@@ -191,12 +280,32 @@ comp <- data.frame(imDbRating=test$imDbRating, predictedRating=predict(imdb_rf, 
 devs <- abs(comp$imDbRating - comp$predictedRating)
 close_enoughs <- function(x) sum(devs <= x)/ length(devs)
 x <- seq(from=0,to=1,by=0.01)
-plot(x, sapply(x, close_enoughs), main="test accuracy", xlab="deviation tolerance", ylab="test data accuracy")
+plot(x, sapply(x, close_enoughs), main="test accuracy with new vars", xlab="deviation tolerance", ylab="test data accuracy")
 
-## NOT MUCH BETTER
+
+
+# ##### TRY USING GENRE TOO #####
+# 
+# ## first make sure the genres are all in the same order
+# tt <-lapply(lapply(imdb_details_extd[, "genres"], strsplit, ", "), unlist)
+# tt <- lapply(tt, sort)
+# tt <- lapply(tt, paste, collapse=", ")
+# imdb_details_extd[, "genres"] <- unlist(tt)
+# 
+# imdb_rf = randomForest(imDbRating ~ budget+runtime+genres+year+rating, data = train, mtry = 3)
+# 
+# ## compare the predictions to the data 
+# comp <- data.frame(imDbRating=test$imDbRating, predictedRating=predict(imdb_rf, test))
+# 
+# devs <- abs(comp$imDbRating - comp$predictedRating)
+# close_enoughs <- function(x) sum(devs <= x)/ length(devs)
+# x <- seq(from=0,to=1,by=0.01)
+# plot(x, sapply(x, close_enoughs), main="test accuracy", xlab="deviation tolerance", ylab="test data accuracy")
+# 
+# ## NOT MUCH BETTER
 
 ###############################################################################
-## using tinymodels to tune hyperparameters and show more about randomforest ##
+## using tidymodels to tune hyperparameters and show more about randomforest ##
 ###############################################################################
 
 library(tidyverse)
@@ -208,6 +317,7 @@ imdb_details <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Fin
 imdb_top250_movies <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_top250_movies.csv")
 imdb_top250_shows <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_top250_shows.csv")
 imdb_details_extd <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_details_extd.csv")
+
 
 trees_df <- filter(imdb_details_extd, type == "Movie") %>%
                     na.omit() 
@@ -276,5 +386,18 @@ final_res <- final_wf %>%
 
 final_res %>%
   collect_metrics()
+
+#############################################################################################
+## using tidymodels to tune hyperparameters and show more about randomforest with new vars ##
+#############################################################################################
+
+library(tidyverse)
+library(tidymodels)
+library(vip)
+
+
+imdb_details_extd2 <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_details_extd2.csv")
+colnames(imdb_details_extd2)[25:28] <- c("oscar_nom", "award_wins", "dir_pop_fac", "co_size")
+imdb_details_extd2$award_wins <- log(imdb_details_extd2$award_wins + 1)
 
 

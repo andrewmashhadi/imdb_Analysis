@@ -1,0 +1,265 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+## Reading in the data
+```{r}
+library(tidyverse)
+library(tm)
+library(tidytext)
+library(factoextra)
+library(cluster)
+# this package masks select function
+library(klaR)
+library(ggpubr)
+
+# imdb_boxOffice <- read.csv("/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_boxOffice.csv")
+# imdb_details <- read.csv("/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_details.csv")
+# imdb_top250_movies <- read.csv("/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_top250_movies.csv")
+# imdb_top250_shows <- read.csv("/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_top250_shows.csv")
+imdb_details_extd_extra <- read.csv("/Users/ajaypatel21/Desktop/STAT405_Data/Project/imdb_details_extd_extra.csv")
+# historic_cpi <- read.csv("/Users/ajaypatel21/Desktop/STAT405_Data/Project/historic_cpi.csv")
+
+imdb_details_extd_extra <- imdb_details_extd_extra %>%
+  dplyr::select(-X.1)
+```
+
+
+## Cleaning Categorical Variables
+```{r}
+`%notin%` <- Negate(`%in%`)
+
+# Cleaning language variable - some levels had small counts
+imdb_details_extd_extra$languages[imdb_details_extd_extra$languages == "English, None"] <- "English"
+imdb_details_extd_extra$languages[imdb_details_extd_extra$languages == "None, English"] <- "English"
+imdb_details_extd_extra$languages[imdb_details_extd_extra$languages == "None, French"] <- "French"
+imdb_details_extd_extra$languages[grepl(",", imdb_details_extd_extra$languages) == T] <- "Multilingual"
+imdb_details_extd_extra$languages[imdb_details_extd_extra$languages == ""] <- "None"
+
+imdb_details_extd_extra$languages[imdb_details_extd_extra$languages %notin% c("English")] <- "Multilingual_Foreign"
+
+# Each show/movie has one genre of the 2+ genres listed, so I'm randomly picking 1 genre
+set.seed(123)
+genre <- c()
+imdb_details_extd_extra$genres[imdb_details_extd_extra$genres == ""] <- "Other"
+for (i in 1:5054) {
+  num_genres <- length(strsplit(imdb_details_extd_extra$genres, ", ")[[i]])
+  random_genre_idx <- sample(1:num_genres, 1)
+  genre[i] <- strsplit(imdb_details_extd_extra$genres, ", ")[[i]][random_genre_idx]
+}
+
+# Cleaning genre - some genres had low counts
+imdb_details_extd_extra$genre <- genre
+imdb_details_extd_extra$genre[imdb_details_extd_extra$genre %in% c("Animation", "Biography", "Documentary", "Family", "Fantasy", "Film-Noir", "History", "Music", "Musical", "Mystery", "Other", "Reality-TV", "Sci-Fi", "Short", "Sport", "Talk-Show", "War", "Western")] <- "Other"
+
+# Cleaning rating
+imdb_details_extd_extra$rating[imdb_details_extd_extra$rating %notin% c("PG", "PG-13", "R")] <- "Other"
+```
+
+
+## Preparing Data for KNN Algorithm
+```{r}
+knn_data <- imdb_details_extd_extra %>%
+  dplyr::select(fullTitle, year, runtime, imDbRating, budget, grossUSA, grossWorldwide, metacriticRating, oscar_won, oscar_nom, star_power, release_month, languages, rating, genre, dir_pop_fac, co_size) %>%
+  mutate(languages = factor(languages),
+         rating = factor(rating),
+         genre = factor(genre),
+         dir_pop_fac = factor(dir_pop_fac),
+         co_size = factor(co_size))
+
+# Filling NA's in each column with the column mean
+for(i in 1:ncol(knn_data)) {
+  knn_data[is.na(knn_data[,i]), i] <- mean(knn_data[,i], na.rm = TRUE)
+}
+
+# Dummy coding categorical variables
+knn_data <- cbind(knn_data, as.data.frame(psych::dummy.code(knn_data$languages)))
+
+rating <- as.data.frame(psych::dummy.code(knn_data$rating)) %>%
+  rename(Other_rating = Other)
+
+knn_data <- cbind(knn_data, rating)
+
+genre <- as.data.frame(psych::dummy.code(knn_data$genre)) %>%
+  rename(Other_genre = Other)
+
+knn_data <- cbind(knn_data, genre)
+
+
+dir_pop_fac <- as.data.frame(psych::dummy.code(knn_data$dir_pop_fac)) %>%
+  rename(dir_pop_fac3 = "3",
+         dir_pop_fac2 = "2",
+         dir_pop_fac1 = "1",
+         dir_pop_fac0 = "0")
+
+knn_data <- cbind(knn_data, dir_pop_fac)
+
+co_size <- as.data.frame(psych::dummy.code(knn_data$co_size)) %>%
+  rename(co_size3 = "3",
+         co_size2 = "2",
+         co_size1 = "1",
+         co_size0 = "0")
+
+knn_data <- cbind(knn_data, co_size)
+
+
+knn_data <- knn_data %>%
+  dplyr::select(-languages, -rating, -genre, -dir_pop_fac, -co_size)
+```
+
+
+## Movie Recommendation
+```{r}
+k_nearest_neighbors <- function(data, fullTitleName, num_movies) {
+  temp <- data
+  
+  temp[, -1] <- scale(temp[, -1])
+  X <- temp %>%
+    filter(fullTitle == fullTitleName)
+  
+  # euclidean distance for KNN
+  distance <- sqrt( (temp$year - X$year)^2 + 
+                    (temp$runtime - X$runtime)^2 + 
+                    (temp$imDbRating - X$imDbRating)^2 + 
+                    (temp$budget - X$budget)^2 + 
+                    (temp$grossUSA - X$grossUSA)^2 + 
+                    (temp$grossWorldwide - X$grossWorldwide)^2 + 
+                    (temp$metacriticRating - X$metacriticRating)^2 + 
+                    (temp$oscar_won - X$oscar_won)^2 + 
+                    (temp$oscar_nom - X$oscar_nom)^2 + 
+                    (temp$star_power - X$star_power)^2 + 
+                    (temp$release_month - X$release_month)^2 + 
+                    (temp$English - X$English)^2 + 
+                    (temp$Multilingual_Foreign - X$Multilingual_Foreign)^2 + 
+                    (temp$R - X$R)^2 + 
+                    (temp$`PG-13` - X$`PG-13`)^2 + 
+                    (temp$Other_rating - X$Other_rating)^2 + 
+                    (temp$PG - X$PG)^2 + 
+                    (temp$Other_genre - X$Other_genre)^2 + 
+                    (temp$Drama - X$Drama)^2 + 
+                    (temp$Comedy - X$Comedy)^2 + 
+                    (temp$Action - X$Action)^2 + 
+                    (temp$Adventure - X$Adventure)^2 + 
+                    (temp$Thriller - X$Thriller)^2 + 
+                    (temp$Crime - X$Crime)^2 + 
+                    (temp$Romance - X$Romance)^2 + 
+                    (temp$Horror - X$Horror)^2 + 
+                    (temp$dir_pop_fac3 - X$dir_pop_fac3)^2 + 
+                    (temp$dir_pop_fac2 - X$dir_pop_fac2)^2 + 
+                    (temp$dir_pop_fac1 - X$dir_pop_fac1)^2 + 
+                    (temp$dir_pop_fac0 - X$dir_pop_fac0)^2 + 
+                    (temp$co_size3 - X$co_size3)^2 + 
+                    (temp$co_size2 - X$co_size2)^2 + 
+                    (temp$co_size1 - X$co_size1)^2 + 
+                    (temp$co_size0 - X$co_size0)^2 )
+  
+  data$distance <- distance
+  
+  # constrains the recommendations to be in the same cluster
+  output <- data %>% 
+    arrange(distance) %>% 
+    head(num_movies) %>%
+    mutate(distance = round(distance, 3),
+           runtime = round(runtime, 0),
+           budget = prettyNum(budget, big.mark = ",", scientific = F),
+           grossUSA = prettyNum(grossUSA, big.mark = ",", scientific = F),
+           grossWorldwide = prettyNum(grossWorldwide, big.mark = ",", scientific = F)) %>%
+    rename(`Full Title` = fullTitle,
+           Year = year,
+           `Runtime Minutes` = runtime,
+           `IMDB Rating` = imDbRating,
+           `Budget $` = budget,
+           `Gross USA $` = grossUSA,
+           `Gross Worldwide $` = grossWorldwide,
+           `Metacritic Rating` = metacriticRating,
+           Distance = distance)
+  
+  return(output)
+}
+
+ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Avengers: Endgame (2019)", 10)
+ten_nearest_movies
+
+fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Avengers: Endgame (2019)", 50)
+```
+
+
+## Plots about 50 nearest neigbors
+```{r}
+# Extracting titles from 50 nearest movies
+titles <- fifty_nearest_movies$`Full Title`
+
+movie_info <- imdb_details_extd_extra %>%
+  filter(fullTitle %in% titles) %>%
+  dplyr::select(X, id, title, type, year, imDbRating, genres, plot, keywords, grossUSA)
+
+# Most common words from plot in 50 nearest movies
+movie_info %>%
+  unnest_tokens(word, plot) %>%
+  anti_join(stop_words) %>%
+  count(word, sort = T) %>%
+  slice_max(order_by = n, n = 5) %>%
+  head(5) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word, fill = factor(word))) + 
+  geom_col(show.legend = F) + 
+  ylab("Word") +
+  ggtitle("Most Common Words in Plots from 50 Nearest Movies") +
+  theme_minimal()
+
+# Most common genres from nearest 50 movies
+movie_info %>%
+  unnest_tokens(word, genres, token = str_split, pattern = ", ") %>%
+  anti_join(stop_words) %>%
+  count(word, sort = T) %>%
+  slice_max(order_by = n, n = 5) %>%
+  head(5) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word, fill = factor(word))) + 
+  geom_col(show.legend = F) + 
+  ylab("Genre") +
+  ggtitle("Most Common Genres from 50 Nearest Movies") +
+  theme_minimal()
+
+# Most common keywords from 50 nearest movies
+movie_info %>%
+  unnest_tokens(word, keywords, token = str_split, pattern = ",") %>%
+  anti_join(stop_words) %>%
+  count(word, sort = T) %>%
+  slice_max(order_by = n, n = 5) %>%
+  head(5) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word, fill = factor(word))) + 
+  geom_col(show.legend = F) + 
+  ylab("Keywords") +
+  ggtitle("Most Common Keywords from 50 Nearest Movies") +
+  theme_minimal()
+
+# Top 5 highest rated movies from 50 nearest movies
+movie_info %>%
+  slice_max(order_by = imDbRating, n = 5) %>%
+  head(5) %>%
+  mutate(title = reorder(title, imDbRating)) %>%
+  ggplot(aes(x = imDbRating, y = title, fill = factor(title))) +
+  geom_col(show.legend = F) +
+  xlab("IMDB Rating") + 
+  ylab("Movie Title") + 
+  ggtitle("Highest Rated Movies from 50 Nearest Movies") + 
+  theme_minimal()
+
+# Top 5 highest grossUSA movies from 50 nearest movies
+require(scales)
+movie_info %>%
+  slice_max(order_by = grossUSA, n = 5) %>%
+  head(5) %>%
+  mutate(title = reorder(title, grossUSA)) %>%
+  ggplot(aes(x = grossUSA, y = title, fill = factor(title))) +
+  geom_col(show.legend = F) +
+  ylab("Movie Title") + 
+  xlab("US Gross") +
+  ggtitle("Highest US Gross Movies in 50 Nearest Movies") + 
+  theme_minimal() +
+  scale_x_continuous(labels = comma)
+```
+

@@ -283,110 +283,6 @@ x <- seq(from=0,to=1,by=0.01)
 plot(x, sapply(x, close_enoughs), main="test accuracy with new vars", xlab="deviation tolerance", ylab="test data accuracy")
 
 
-
-# ##### TRY USING GENRE TOO #####
-# 
-# ## first make sure the genres are all in the same order
-# tt <-lapply(lapply(imdb_details_extd[, "genres"], strsplit, ", "), unlist)
-# tt <- lapply(tt, sort)
-# tt <- lapply(tt, paste, collapse=", ")
-# imdb_details_extd[, "genres"] <- unlist(tt)
-# 
-# imdb_rf = randomForest(imDbRating ~ budget+runtime+genres+year+rating, data = train, mtry = 3)
-# 
-# ## compare the predictions to the data 
-# comp <- data.frame(imDbRating=test$imDbRating, predictedRating=predict(imdb_rf, test))
-# 
-# devs <- abs(comp$imDbRating - comp$predictedRating)
-# close_enoughs <- function(x) sum(devs <= x)/ length(devs)
-# x <- seq(from=0,to=1,by=0.01)
-# plot(x, sapply(x, close_enoughs), main="test accuracy", xlab="deviation tolerance", ylab="test data accuracy")
-# 
-# ## NOT MUCH BETTER
-
-###############################################################################
-## using tidymodels to tune hyperparameters and show more about randomforest ##
-###############################################################################
-
-library(tidyverse)
-library(tidymodels)
-library(vip)
-
-imdb_boxOffice <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_boxOffice.csv")
-imdb_details <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_details.csv")
-imdb_top250_movies <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_top250_movies.csv")
-imdb_top250_shows <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_top250_shows.csv")
-imdb_details_extd <- read.csv("C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_details_extd.csv")
-
-
-trees_df <- filter(imdb_details_extd, type == "Movie") %>%
-                    na.omit() 
-
-trees_split <- initial_split(trees_df)
-trees_train <- training(trees_split)
-trees_test <- testing(trees_split)
-
-
-# build recipe (just instructions)
-tree_rec <- recipe(imDbRating ~ budget+runtime+genres+year+rating, data = trees_train) %>%
-            step_other(genres, threshold = 0.01)
-            
-# prep actually uses the data
-tree_prep <- prep(tree_rec)
-juiced <- juice(tree_prep)
-
-# build model
-tune_spec <- rand_forest(
-  mtry = tune(),
-  trees = 1000,
-  min_n = tune()
-) %>%
-  set_mode("regression") %>%
-  set_engine("ranger")
-
-
-# tune_wf <- workflow() %>%
-#   add_recipe(tree_rec) %>%
-#   add_model(tune_spec)
-# 
-# # create a set of cross-validation resamples to use for tuning
-# trees_folds <- vfold_cv(trees_train)
-# 
-# 
-# # choose 3 grid points automatically (NOT WORKING)
-# tune_res <- tune_grid(
-#   tune_wf,
-#   resamples = trees_folds,
-#   grid = 3
-# )
-
-
-# seeing if importance plots still work with un-tuned mtry
-final_rf <- rand_forest(
-  mtry = 3,
-  trees = 1000,
-) %>%
-  set_mode("regression") %>%
-  set_engine("ranger")
-
-
-final_rf %>%
-  set_engine("ranger", importance = "permutation") %>%
-  fit(imDbRating ~ .,
-      data = juice(tree_prep)
-  ) %>%
-  vip(geom = "point")
-
-final_wf <- workflow() %>%
-  add_recipe(tree_rec) %>%
-  add_model(final_rf)
-
-final_res <- final_wf %>%
-  last_fit(trees_split)
-
-final_res %>%
-  collect_metrics()
-
 #############################################################################################
 ## using tidymodels to tune hyperparameters and show more about randomforest with new vars ##
 #############################################################################################
@@ -401,3 +297,151 @@ colnames(imdb_details_extd2)[25:28] <- c("oscar_nom", "award_wins", "dir_pop_fac
 imdb_details_extd2$award_wins <- log(imdb_details_extd2$award_wins + 1)
 
 
+trees_df <- filter(imdb_details_extd2, type == "Movie") %>%
+  na.omit() 
+
+trees_split <- initial_split(trees_df)
+trees_train <- training(trees_split)
+trees_test <- testing(trees_split)
+
+
+# build recipe (just instructions)
+tree_rec <- recipe(imDbRating ~  budget+runtime+year+rating+oscar_nom+award_wins+dir_pop_fac+co_size, 
+                   data = trees_train) %>% 
+            step_other(rating, threshold = 0.05) %>%
+            step_unknown(rating) %>%
+            step_dummy(all_nominal(), -all_outcomes())
+
+# prep actually uses the data
+tree_prep <- prep(tree_rec)
+juiced <- juice(tree_prep)
+
+# check the step_other results
+# juiced %>% count(rating, sort = T)
+
+summary(tree_rec)
+
+
+# build model
+tune_spec <- rand_forest(
+  mtry = tune(),
+  trees = tune()
+) %>%
+  set_mode("regression") %>%
+  set_engine("ranger")
+
+tune_wf <- workflow() %>%
+  add_recipe(tree_rec) %>%
+  add_model(tune_spec)
+
+# create a set of cross-validation resamples to use for tuning
+trees_folds <- vfold_cv(trees_train)
+
+
+# choose 10 grid points automatically 
+tune_res <- tune_grid(
+  tune_wf,
+  resamples = trees_folds,
+  grid = 10
+)
+
+### rmse plot for tuning mtry and number of trees
+tune_res %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  select(mean, trees, mtry) %>%
+  pivot_longer(trees:mtry,
+               values_to = "value",
+               names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "rmse")
+
+### rsq plot for tuning mtry and number of trees
+tune_res %>%
+  collect_metrics() %>%
+  filter(.metric == "rsq") %>%
+  select(mean, trees, mtry) %>%
+  pivot_longer(trees:mtry,
+               values_to = "value",
+               names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "Rsq")
+
+## looks like 3 for mtry and 1000-1500 for trees could work best
+
+### taking a closer look now
+
+rf_grid <- grid_regular(
+  mtry(range = c(2, 5)),
+  trees(range = c(1000, 1500)),
+  levels = 4
+)
+
+regular_res <- tune_grid(
+  tune_wf,
+  resamples = trees_folds,
+  grid = rf_grid
+)
+
+## rmse plot for tuning mtry and number of trees
+regular_res %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  mutate(trees = factor(trees)) %>%
+  ggplot(aes(mtry, mean, color = trees)) +
+  geom_line(alpha = 0.5, size = 1.5) +
+  geom_point() +
+  labs(y = "rmse")
+
+## rsq plot for tuning mtry and number of trees
+regular_res %>%
+  collect_metrics() %>%
+  filter(.metric == "rsq") %>%
+  mutate(trees = factor(trees)) %>%
+  ggplot(aes(mtry, mean, color = trees)) +
+  geom_line(alpha = 0.5, size = 1.5) +
+  geom_point() +
+  labs(y = "rsq")
+
+## looks like 3 for mtry and 1166 for trees is optimal
+
+## build model with tuned params
+final_rf <- rand_forest(
+  mtry = 3,
+  trees = 1166,
+) %>%
+  set_mode("regression") %>%
+  set_engine("ranger")
+
+# checking out importance plots 
+final_rf %>%
+  set_engine("ranger", importance = "permutation") %>%
+  fit(imDbRating ~ .,
+      data = juice(tree_prep)
+  ) %>%
+  vip(geom = "point")
+
+
+### view metrics
+
+final_wf <- workflow() %>%
+  add_recipe(tree_rec) %>%
+  add_model(final_rf)
+
+final_res <- final_wf %>%
+  last_fit(trees_split)
+
+final_res %>%
+  collect_metrics()
+
+# # A tibble: 2 x 4
+# .metric .estimator .estimate .config             
+# <chr>   <chr>          <dbl> <chr>               
+#   1 rmse    standard       0.693 Preprocessor1_Model1
+#   2 rsq     standard       0.494 Preprocessor1_Model1

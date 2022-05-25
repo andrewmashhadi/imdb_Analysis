@@ -7,11 +7,6 @@
 ## Set up
 ## ========================================================================== ##
 
-#### STILL WIP ####
-#### STILL WIP ####
-#### STILL WIP ####
-#### STILL WIP ####
-
 #### read Renviron file
 readRenviron("/Users/danielkwon/Repos/Stats-405-Data-Management/.Renviron")
 

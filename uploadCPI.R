@@ -32,10 +32,12 @@ if(!dir.exists("_assets")) {                                                    
 ## ========================================================================== ##
 
 #### read TSVs
-df_monthly_cpi <- read_csv(file = "monthly_cpi_data_extract.csv", 
+df_cpi <- read_csv(file = "monthly_cpi_data_extract.csv", 
                            col_names = TRUE, 
-                           na = c("", "NA", "\\N"))
+                           na = c("", "NA", "\\N")) %>% as_tibble()
 
+#### aggregate yearly
+df_cpi <- df_cpi %>% rowwise() %>% mutate(yearly_avg = mean(c(Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec)))
 #### connect to your database
 drv <- dbDriver("MySQL")
 mydb_sock <- ""
@@ -52,12 +54,12 @@ con_mydb_admin <- dbConnect(drv,user=mydb_user,
                             unix.sock=mydb_sock)
 
 #### write to database
-if (dbExistsTable(con_mydb_admin, "monthly_cpi")) {
+if (dbExistsTable(con_mydb_admin, "historic_cpi")) {
   dbGetQuery(con_mydb_admin, paste0("DROP TABLE IF EXISTS ", i))
 } else {
   dbWriteTable(conn=con_mydb_admin, 
-               name="monthly_cpi",
-               value=df_monthly_cpi,
+               name="historic_cpi",
+               value=df_cpi,
                skip_empty_rows = TRUE)
 }
 

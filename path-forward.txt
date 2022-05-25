@@ -3,15 +3,15 @@ GENERAL FLOW OF PAPER
 BACKGROUND
 ...
 
-DATA COLLECTIONS AND CLEANING
+DATA COLLECTIONS AND CLEANING AND METHODS
 - Briefly discuss methods of data gathering and storing (api, html/xpaths, json locally, RDS for analysis)
    
 
 MOTIVE
 
 Execs want to make a movie, we present our options with 3 paths:
-- Gross box office route (monetary focused) -- predictive modeling using random forest and comparing with lm 
-- ImdbRating route (award focused) -- predictive modeling using ranodm forest and comparing with lm
+- Gross box office route (monetary focused) -- predictive modeling using random forest and comparing with lm
+- ImdbRating/Oscar-Nominations route (award focused) -- predictive modeling using random forest and comparing with lm or lr
 - Execs might have certain movies in mind -- we could use unsupervised for a recommendation system to present
   them with similar movies, and then focus on the details of those similar movies
 
@@ -20,7 +20,7 @@ SECTION (1)
 - ImDbRating predictions
 - GrossboxOffice predictions (CPI adjusted) 
 - random forests (with feature importance plots), lm's, etc. 
-  (make sure to display plots used to optimize/tune the hyperparameters)
+  (make sure to display all usefull plots, and plots used to optimize/tune the hyperparameters)
 - use models with Dylan's additional numeric variables
 - compare different models predictive values with MSE (K-fold CV) and prediction accuracy and R^2
 - exploratory data analysis with Dan's plots (used to support findings of the models, and for more fluff)

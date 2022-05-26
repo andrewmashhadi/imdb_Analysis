@@ -59,7 +59,7 @@ imdb_details_extd_extra$rating[imdb_details_extd_extra$rating %notin% c("PG", "P
 
 
 ## Preparing Data for KNN Algorithm
-```{r}
+```{r, warning=FALSE}
 knn_data <- imdb_details_extd_extra %>%
   dplyr::select(fullTitle, year, runtime, imDbRating, budget, grossUSA, grossWorldwide, metacriticRating, oscar_won, oscar_nom, star_power, release_month, languages, rating, genre, dir_pop_fac, co_size) %>%
   mutate(languages = factor(languages),
@@ -109,7 +109,7 @@ knn_data <- knn_data %>%
 ```
 
 
-## Movie Recommendation
+## Movie Recommendation Function and Plot Function
 ```{r}
 k_nearest_neighbors <- function(data, fullTitleName, num_movies) {
   temp <- data
@@ -177,92 +177,155 @@ k_nearest_neighbors <- function(data, fullTitleName, num_movies) {
   return(output)
 }
 
+
+# Plot Functions
+plot1_function <- function(movie_info) {
+  # Most common words from plot in 50 nearest movies
+  movie_info %>%
+    unnest_tokens(word, plot) %>%
+    anti_join(stop_words) %>%
+    count(word, sort = T) %>%
+    slice_max(order_by = n, n = 5) %>%
+    head(5) %>%
+    mutate(word = reorder(word, n)) %>%
+    ggplot(aes(n, word, fill = factor(word))) + 
+    geom_col(show.legend = F) + 
+    ylab("Word") +
+    ggtitle("Most Common Words in Plots from 50 Nearest Movies") +
+    theme_minimal() + 
+    scale_x_continuous(breaks = seq(0, 100, 4), expand = c(0,0))
+}
+
+plot2_function <- function(movie_info) {
+  # Most common genres from nearest 50 movies
+  movie_info %>%
+    unnest_tokens(word, genres, token = str_split, pattern = ", ") %>%
+    anti_join(stop_words) %>%
+    count(word, sort = T) %>%
+    slice_max(order_by = n, n = 5) %>%
+    head(5) %>%
+    mutate(word = reorder(word, n)) %>%
+    ggplot(aes(n, word, fill = factor(word))) + 
+    geom_col(show.legend = F) + 
+    ylab("Genre") +
+    ggtitle("Most Common Genres from 50 Nearest Movies") +
+    theme_minimal() + 
+    scale_x_continuous(breaks = seq(0, 100, 4), expand = c(0,0))
+}
+
+plot3_function <- function(movie_info) {
+  # Most common keywords from 50 nearest movies
+  movie_info %>%
+    unnest_tokens(word, keywords, token = str_split, pattern = ",") %>%
+    anti_join(stop_words) %>%
+    count(word, sort = T) %>%
+    slice_max(order_by = n, n = 5) %>%
+    head(5) %>%
+    mutate(word = reorder(word, n)) %>%
+    ggplot(aes(n, word, fill = factor(word))) + 
+    geom_col(show.legend = F) + 
+    ylab("Keywords") +
+    ggtitle("Most Common Keywords from 50 Nearest Movies") +
+    theme_minimal() + 
+    scale_x_continuous(breaks = seq(0, 100, 4), expand = c(0,0))
+}
+
+plot4_function <- function(movie_info) {
+  # Top 5 highest rated movies from 50 nearest movies
+  movie_info %>%
+    slice_max(order_by = imDbRating, n = 5) %>%
+    head(5) %>%
+    mutate(title = reorder(title, imDbRating)) %>%
+    ggplot(aes(x = imDbRating, y = title, fill = factor(title))) +
+    geom_col(show.legend = F) +
+    xlab("IMDB Rating") + 
+    ylab("Movie Title") + 
+    ggtitle("Highest Rated Movies from 50 Nearest Movies") + 
+    theme_minimal() + 
+    scale_x_continuous(breaks = seq(0, 10, 1), expand = c(0,0))
+}
+
+plot5_function <- function(movie_info) {
+  # Top 5 highest grossUSA movies from 50 nearest movies
+  require(scales)
+  movie_info %>%
+    slice_max(order_by = grossUSA, n = 5) %>%
+    head(5) %>%
+    mutate(title = reorder(title, grossUSA)) %>%
+    ggplot(aes(x = grossUSA, y = title, fill = factor(title))) +
+    geom_col(show.legend = F) +
+    ylab("Movie Title") + 
+    xlab("US Gross") +
+    ggtitle("Highest US Gross Movies from 50 Nearest Movies") + 
+    theme_minimal() +
+    scale_x_continuous(labels = comma, breaks = seq(0, 1000000000, 100000000), expand = c(0,0))
+}
+```
+
+
+## Avengers: Endgame (2019)
+```{r}
 ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Avengers: Endgame (2019)", 10)
 ten_nearest_movies
 
 fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Avengers: Endgame (2019)", 50)
-```
 
-
-## Plots about 50 nearest neigbors
-```{r}
 # Extracting titles from 50 nearest movies
 titles <- fifty_nearest_movies$`Full Title`
-
+  
 movie_info <- imdb_details_extd_extra %>%
   filter(fullTitle %in% titles) %>%
   dplyr::select(X, id, title, type, year, imDbRating, genres, plot, keywords, grossUSA)
 
-# Most common words from plot in 50 nearest movies
-movie_info %>%
-  unnest_tokens(word, plot) %>%
-  anti_join(stop_words) %>%
-  count(word, sort = T) %>%
-  slice_max(order_by = n, n = 5) %>%
-  head(5) %>%
-  mutate(word = reorder(word, n)) %>%
-  ggplot(aes(n, word, fill = factor(word))) + 
-  geom_col(show.legend = F) + 
-  ylab("Word") +
-  ggtitle("Most Common Words in Plots from 50 Nearest Movies") +
-  theme_minimal() + 
-  scale_x_continuous(breaks = seq(0, 28, 4), expand = c(0,0))
-
-# Most common genres from nearest 50 movies
-movie_info %>%
-  unnest_tokens(word, genres, token = str_split, pattern = ", ") %>%
-  anti_join(stop_words) %>%
-  count(word, sort = T) %>%
-  slice_max(order_by = n, n = 5) %>%
-  head(5) %>%
-  mutate(word = reorder(word, n)) %>%
-  ggplot(aes(n, word, fill = factor(word))) + 
-  geom_col(show.legend = F) + 
-  ylab("Genre") +
-  ggtitle("Most Common Genres from 50 Nearest Movies") +
-  theme_minimal() + 
-  scale_x_continuous(breaks = seq(0, 48, 4), expand = c(0,0))
-
-# Most common keywords from 50 nearest movies
-movie_info %>%
-  unnest_tokens(word, keywords, token = str_split, pattern = ",") %>%
-  anti_join(stop_words) %>%
-  count(word, sort = T) %>%
-  slice_max(order_by = n, n = 5) %>%
-  head(5) %>%
-  mutate(word = reorder(word, n)) %>%
-  ggplot(aes(n, word, fill = factor(word))) + 
-  geom_col(show.legend = F) + 
-  ylab("Keywords") +
-  ggtitle("Most Common Keywords from 50 Nearest Movies") +
-  theme_minimal() + 
-  scale_x_continuous(breaks = seq(0, 16, 4), expand = c(0,0))
-
-# Top 5 highest rated movies from 50 nearest movies
-movie_info %>%
-  slice_max(order_by = imDbRating, n = 5) %>%
-  head(5) %>%
-  mutate(title = reorder(title, imDbRating)) %>%
-  ggplot(aes(x = imDbRating, y = title, fill = factor(title))) +
-  geom_col(show.legend = F) +
-  xlab("IMDB Rating") + 
-  ylab("Movie Title") + 
-  ggtitle("Highest Rated Movies from 50 Nearest Movies") + 
-  theme_minimal() + 
-  scale_x_continuous(breaks = seq(0, 10, 1), expand = c(0,0))
-
-# Top 5 highest grossUSA movies from 50 nearest movies
-require(scales)
-movie_info %>%
-  slice_max(order_by = grossUSA, n = 5) %>%
-  head(5) %>%
-  mutate(title = reorder(title, grossUSA)) %>%
-  ggplot(aes(x = grossUSA, y = title, fill = factor(title))) +
-  geom_col(show.legend = F) +
-  ylab("Movie Title") + 
-  xlab("US Gross") +
-  ggtitle("Highest US Gross Movies from 50 Nearest Movies") + 
-  theme_minimal() +
-  scale_x_continuous(labels = comma, breaks = seq(0, 1000000000, 250000000), expand = c(0,0))
+plot1_function(movie_info)
+plot2_function(movie_info)
+plot3_function(movie_info)
+plot4_function(movie_info)
+plot5_function(movie_info)
 ```
 
+
+## Star Wars: Episode VII - The Force Awakens (2015)
+This is the max grossUSA movie
+```{r}
+ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Star Wars: Episode VII - The Force Awakens (2015)", 10)
+ten_nearest_movies
+
+fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Star Wars: Episode VII - The Force Awakens (2015)", 50)
+
+# Extracting titles from 50 nearest movies
+titles <- fifty_nearest_movies$`Full Title`
+  
+movie_info <- imdb_details_extd_extra %>%
+  filter(fullTitle %in% titles) %>%
+  dplyr::select(X, id, title, type, year, imDbRating, genres, plot, keywords, grossUSA)
+
+plot1_function(movie_info)
+plot2_function(movie_info)
+plot3_function(movie_info)
+plot4_function(movie_info)
+plot5_function(movie_info)
+```
+
+
+## The Godfather (1972)
+The Godfather has the highest metacritic rating and imdb rating of movies that won an oscar
+```{r}
+ten_nearest_movies <-  k_nearest_neighbors(knn_data, "The Godfather (1972)", 10)
+ten_nearest_movies
+
+fifty_nearest_movies <- k_nearest_neighbors(knn_data, "The Godfather (1972)", 50)
+
+# Extracting titles from 50 nearest movies
+titles <- fifty_nearest_movies$`Full Title`
+  
+movie_info <- imdb_details_extd_extra %>%
+  filter(fullTitle %in% titles) %>%
+  dplyr::select(X, id, title, type, year, imDbRating, genres, plot, keywords, grossUSA)
+
+plot1_function(movie_info)
+plot2_function(movie_info)
+plot3_function(movie_info)
+plot4_function(movie_info)
+plot5_function(movie_info)
+```

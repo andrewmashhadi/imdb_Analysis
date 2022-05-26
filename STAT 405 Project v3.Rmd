@@ -156,7 +156,6 @@ k_nearest_neighbors <- function(data, fullTitleName, num_movies) {
   
   data$distance <- distance
   
-  # constrains the recommendations to be in the same cluster
   output <- data %>% 
     arrange(distance) %>% 
     head(num_movies) %>%
@@ -206,7 +205,8 @@ movie_info %>%
   geom_col(show.legend = F) + 
   ylab("Word") +
   ggtitle("Most Common Words in Plots from 50 Nearest Movies") +
-  theme_minimal()
+  theme_minimal() + 
+  scale_x_continuous(breaks = seq(0, 28, 4), expand = c(0,0))
 
 # Most common genres from nearest 50 movies
 movie_info %>%
@@ -220,7 +220,8 @@ movie_info %>%
   geom_col(show.legend = F) + 
   ylab("Genre") +
   ggtitle("Most Common Genres from 50 Nearest Movies") +
-  theme_minimal()
+  theme_minimal() + 
+  scale_x_continuous(breaks = seq(0, 48, 4), expand = c(0,0))
 
 # Most common keywords from 50 nearest movies
 movie_info %>%
@@ -234,7 +235,8 @@ movie_info %>%
   geom_col(show.legend = F) + 
   ylab("Keywords") +
   ggtitle("Most Common Keywords from 50 Nearest Movies") +
-  theme_minimal()
+  theme_minimal() + 
+  scale_x_continuous(breaks = seq(0, 16, 4), expand = c(0,0))
 
 # Top 5 highest rated movies from 50 nearest movies
 movie_info %>%
@@ -246,7 +248,8 @@ movie_info %>%
   xlab("IMDB Rating") + 
   ylab("Movie Title") + 
   ggtitle("Highest Rated Movies from 50 Nearest Movies") + 
-  theme_minimal()
+  theme_minimal() + 
+  scale_x_continuous(breaks = seq(0, 10, 1), expand = c(0,0))
 
 # Top 5 highest grossUSA movies from 50 nearest movies
 require(scales)
@@ -258,8 +261,8 @@ movie_info %>%
   geom_col(show.legend = F) +
   ylab("Movie Title") + 
   xlab("US Gross") +
-  ggtitle("Highest US Gross Movies in 50 Nearest Movies") + 
+  ggtitle("Highest US Gross Movies from 50 Nearest Movies") + 
   theme_minimal() +
-  scale_x_continuous(labels = comma)
+  scale_x_continuous(labels = comma, breaks = seq(0, 1000000000, 250000000), expand = c(0,0))
 ```
 

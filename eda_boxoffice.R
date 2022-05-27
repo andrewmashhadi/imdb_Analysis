@@ -63,6 +63,8 @@ df_imdb_details_tvseries_only <- df_imdb_details %>% filter(type == "TVSeries")
 top_directors <- df_imdb_details_movies_only %>% group_by(directors) %>% summarize(n = n()) %>% arrange(desc(n)) %>% top_n(25)
 df_imdb_details_movies_top_directors_only <- df_imdb_details_movies_only %>% filter(directors %in% top_directors[[1]])
 
+View(df_imdb_details_movies_only %>% drop_na(profit_margin) %>% filter((year >= 1990) & (year <= 2019) & (profit_margin < -20)))
+
 #### histogram of numeric variables
 ggplot(df_imdb_details_movies_only %>% drop_na(profit_margin) %>% filter((year >= 1990) & (year <= 2019)), aes_string(x="profit_margin")) + 
   geom_histogram(aes(y=..density..), colour="black", fill="grey", alpha = 0.5) +

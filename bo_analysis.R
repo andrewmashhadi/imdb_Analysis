@@ -75,7 +75,7 @@ xROdbuser <- Sys.getenv("DK_AWS_MY_DB_ROUSER_USER")
 xROpw     <- Sys.getenv("DK_AWS_MY_DB_ROUSER_PW")
 xROdbname <- Sys.getenv("DK_AWS_MY_DB_ROUSER_DBNAME")
 xROdbhost <- Sys.getenv("DK_AWS_MY_DB_ROUSER_HOST")
-xROdbport <- as.integer( Sys.getenv("DK_AWS_MY_DB_ROUSER_PORT=3306") )
+xROdbport <- as.integer( Sys.getenv("DK_AWS_MY_DB_ROUSER_PORT") )
 
 con <-
         dbConnect(
@@ -162,5 +162,7 @@ hist(df_box$inf_adjusted_gp^.25)
 lm_box <- lm(inf_adjusted_gp ~ release_period + runtime + dir_pop_fac + co_size +
                      star_power + wr_pop, data = df_box)
 summary(lm_box)
+
+write.csv(df_box, "C:\\Users\\amiro\\Desktop\\Statistics 405\\Week 5\\Final_Project_Brainstorming\\imdb_details_extd3.csv")
 
 

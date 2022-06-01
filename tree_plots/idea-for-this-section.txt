@@ -1,7 +1,0 @@
-1) start with the binary reg tree model and how it works.
-2) show the single reg tree
-3) talk about pruning it and describe why we would prune it (to reduce overfitting, etc.)
-4) mention the benefits of the random forest instead (bootstrapping and low correlated trees)
-5) discuss and display the nice graphics and results from random forest
-6) display the k-fold cv errors and the predictive accuracy
-7) consider applying to different time intervals, genres, etc. and comparing the results

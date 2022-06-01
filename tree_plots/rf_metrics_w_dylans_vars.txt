@@ -1,5 +1,0 @@
-# # A tibble: 2 x 4
-# .metric .estimator .estimate .config             
-# <chr>   <chr>          <dbl> <chr>               
-#   1 rmse    standard       0.693 Preprocessor1_Model1
-#   2 rsq     standard       0.494 Preprocessor1_Model1

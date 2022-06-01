@@ -208,13 +208,14 @@ tidy(fit__lr_oscar_nom) %>%
 pred__lr_oscar_nom <- 
   predict(fit__lr_oscar_nom, df_test) %>% 
   bind_cols(predict(fit__lr_oscar_nom, df_test, type = "prob")) %>% 
-  bind_cols(df_test %>% select(oscar_nom))
+  bind_cols(df_test %>% dplyr::select(oscar_nom))
 
 pred__lr_oscar_nom %>%
   pr_auc(event_level = "second", truth = oscar_nom, .pred_1)
 pred__lr_oscar_nom %>%
   roc_auc(event_level = "second", truth = oscar_nom, .pred_1)
 
+<<<<<<< HEAD
 
 conf_mat(pred__lr_oscar_nom, oscar_nom, .pred_class)
 
@@ -233,9 +234,12 @@ lr_auc <-
 
 autoplot(lr_auc)
 
+=======
+  conf_mat(pred__lr_oscar_nom, oscar_nom, .pred_class)
+>>>>>>> f06869f879c1369f26558edfeb013cba06de88e7
 
 final_wf %>%
-  last_fit(cell_split) %>%
+  last_fit(data_split) %>%            
   collect_predictions() %>% 
   roc_curve(class, .pred_PS) %>% 
   autoplot()

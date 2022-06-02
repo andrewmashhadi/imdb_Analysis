@@ -12,7 +12,7 @@ readRenviron("/Users/danielkwon/Repos/Stats-405-Data-Management/.Renviron")
 
 # ---- set path ---- #
 xpath_main_data <- Sys.getenv("PATH_MY_MAIN_DATA")
-setwd(paste0(xpath_main_data,"/log-reg-model"))
+setwd(paste0(xpath_main_data,"/imdb-analysis/log-reg-model"))
 
 # ---- create asset folder ---- #
 if(!dir.exists("_assets")) {                                                    # create folder for photos from IMDB
@@ -121,7 +121,7 @@ df_imdb_details <- df_imdb_details %>% select(oscar_nom,
 
 df_movies       <- df_imdb_details %>% filter(type == "Movie")
 df_tvseries     <- df_imdb_details %>% filter(type == "TVSeries")
-
+table(df_movies$oscar_nom)
 # 
 data_split <- initial_split(df_movies, prop = 3/4)
 df_train <- training(data_split)
@@ -132,7 +132,7 @@ folds <- vfold_cv(df_train, v = 10)
 recipe__lr_oscar_nom <- 
   recipe(oscar_nom ~ ., data = df_train) %>% 
   update_role(id, title, type, new_role = "id variable") %>%
-  step_rose(oscar_nom) %>%
+  #step_rose(oscar_nom) %>%
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_predictors()) %>%
@@ -147,10 +147,11 @@ recipe__lr_oscar_nom <-
     impute_with = imp_vars(year))
 
 lr_mod <- 
-  logistic_reg(penalty = 0.001, mixture = 1) %>% 
+  logistic_reg(penalty = 0.0001, mixture = 0.03) %>% 
   set_engine("glmnet")
 
-lr_reg_grid <- tibble(penalty = 10^seq(-4, -1, length.out = 30))
+lr_reg_grid <- tibble(penalty = 10^seq(-4, -1, length.out = 30),
+                       mixture = seq(0, 1, length.out = 30))
 
 wflow__lr_oscar_nom <- 
   workflow() %>% 
@@ -173,6 +174,18 @@ lr_plot <-
   lr_res %>% 
   collect_metrics() %>% 
   ggplot(aes(x = penalty, y = mean)) + 
+  geom_point() + 
+  geom_line() + 
+  ylab("Area under the ROC Curve") +
+  ggtitle("ROC AUC for Different Penalty Terms") +
+  scale_x_log10(labels = scales::label_number())
+
+lr_plot 
+
+lr_plot <- 
+  lr_res %>% 
+  collect_metrics() %>% 
+  ggplot(aes(x = mixture, y = mean)) + 
   geom_point() + 
   geom_line() + 
   ylab("Area under the ROC Curve") +
@@ -203,7 +216,25 @@ pred__lr_oscar_nom %>%
 pred__lr_oscar_nom %>%
   roc_auc(event_level = "second", truth = oscar_nom, .pred_1)
 
-  conf_mat(pred__lr_oscar_nom, oscar_nom, .pred_class)
+conf_mat(pred__lr_oscar_nom, oscar_nom, .pred_class)
+
+best_model <- 
+  fit_rs__lr_oscar_nom %>% 
+  collect_metrics() %>% 
+  arrange(penalty) %>% 
+  slice(12)
+lr_best
+
+lr_auc <- 
+  fit__lr_oscar_nom %>% 
+  collect_predictions(parameters = lr_best) %>% 
+  roc_curve(children, .pred_children) %>% 
+  mutate(model = "Logistic Regression")
+
+autoplot(lr_auc)
+
+conf_mat(pred__lr_oscar_nom, oscar_nom, .pred_class)
+
 
 final_wf %>%
   last_fit(data_split) %>%            

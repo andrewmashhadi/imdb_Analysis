@@ -252,7 +252,7 @@ tune_res %>%
   facet_wrap(~parameter, scales = "free_x") +
   labs(x = NULL, y = "Rsq")
 
-## looks like 3 for mtry and 1000-1500 for trees could work best
+## looks like 6 for mtry and 1000-1500 for trees could work best
 
 ### taking a closer look now
 
@@ -288,11 +288,11 @@ regular_res %>%
   geom_point() +
   labs(y = "rsq")
 
-## looks like 3 for mtry and 1166 for trees is optimal
+## looks like 6 for mtry and 1166 for trees is optimal
 
 ## build model with tuned params
 final_rf <- rand_forest(
-  mtry = 3,
+  mtry = 6,
   trees = 1166,
 ) %>%
   set_mode("regression") %>%
@@ -604,6 +604,8 @@ pred_v_real <- final_res %>%
 
 conf_mat(pred_v_real, oscar_nom, .pred_class)
 
+
+## include both the precision and recall values with precision() and recall() function
 
 
 ```
@@ -1079,7 +1081,7 @@ final_res %>%
 
 
 
-# Compare Box Office Profit Random Forest with Linear Model
+# Compare GPM Random Forest with Linear Model
 
 &nbsp;&nbsp;
 

@@ -607,6 +607,10 @@ conf_mat(pred_v_real, oscar_nom, .pred_class)
 
 ## include both the precision and recall values with precision() and recall() function
 
+yardstick::precision(pred_rf_oscar_nom, oscar_nom, .pred_class, event_level="second" )
+yardstick::recall(pred_rf_oscar_nom, oscar_nom, .pred_class, event_level="second" )
+
+## struggling
 
 ```
 

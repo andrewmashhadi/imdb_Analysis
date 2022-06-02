@@ -58,9 +58,71 @@ df_imdb_details <- dbGetQuery(con, "select * from imdb_details_extd") %>% as_tib
 df_imdb_details <- df_imdb_details %>% mutate(grossUSA = ifelse(is.na(grossUSA), 0, grossUSA),
                                               grossWorldwide = ifelse(is.na(grossWorldwide), 0, grossWorldwide))
 df_imdb_details <- df_imdb_details %>% mutate(metacriticRatingBinned = cut(metacriticRating, breaks=5))
-df_imdb_details <- df_imdb_details %>% mutate(profit_margin = (grossWorldwide-budget)/grossWorldwide)
+
 df_imdb_details <- df_imdb_details %>% mutate(grossUSABinned = cut(grossUSA, breaks=10))
-df_imdb_details <- df_imdb_details %>% mutate(yearBinned = cut(year, breaks=50))
+df_imdb_details <- df_imdb_details %>% mutate(month                  = as.factor(substr(as.character(date),5,6)),
+                                              grossUSA               = ifelse(is.na(grossUSA), 0, grossUSA),
+                                              grossWorldwide         = ifelse(is.na(grossWorldwide), 0, grossWorldwide),
+                                              metacriticRatingBinned = cut(metacriticRating, breaks=5),
+                                              profit_margin          = (grossWorldwide-budget)/grossWorldwide,
+                                              budgetBinned           = as.factor(ntile(budget, 4)),
+                                              grossUSABinned         = cut(grossUSA, breaks=10),
+                                              month                  = as.factor(substring(date,5,2)),
+                                              year_category          = as.factor(case_when(year >= 1960 & year < 1970 ~ "1960-1970",
+                                                                                           year >= 1970 & year < 1980 ~ "1970-1980",
+                                                                                           year >= 1980 & year < 1990 ~ "1980-1990",
+                                                                                           year >= 1990 & year < 2000 ~ "1990-2000",
+                                                                                           year >= 2000 & year < 2010 ~ "2000-2010",
+                                                                                           year >= 2010 ~ "2010+")),
+                                              based_on_novel         = as.factor(case_when(grepl("based on novel", 
+                                                                                                 keywords, 
+                                                                                                 ignore.case = TRUE) ~ 1,
+                                                                                           TRUE ~ 0)),
+                                              biographical          = as.factor(case_when(grepl("biography", 
+                                                                                                 keywords, 
+                                                                                                 ignore.case = TRUE) ~ 1,
+                                                                                           TRUE ~ 0)),
+                                              oscar_nom              = as.factor(case_when(grepl("oscar", 
+                                                                                                 awards,
+                                                                                                 ignore.case = TRUE) ~ 1,
+                                                                                           TRUE ~ 0)),
+                                              genre_binned           = as.factor(case_when(grepl("Sport", 
+                                                                                                 genres, 
+                                                                                                 ignore.case = TRUE) ~ "sport",
+                                                                                           grepl("Biography", 
+                                                                                                 genres, 
+                                                                                                 ignore.case = TRUE) ~ "biography",
+                                                                                           grepl("Horror", 
+                                                                                                 genres, 
+                                                                                                 ignore.case = TRUE) ~ "horror/mystery/thriller",
+                                                                                           grepl("Mystery", 
+                                                                                                 genres, 
+                                                                                                 ignore.case = TRUE) ~ "horror/mystery/thriller",
+                                                                                           grepl("Thriller", 
+                                                                                                 genres, 
+                                                                                                 ignore.case = TRUE) ~ "horror/mystery/thriller",
+                                                                                           grepl("Fantasy", 
+                                                                                                 genres, 
+                                                                                                 ignore.case = TRUE) ~ "fantasy",
+                                                                                           grepl("Comedy", 
+                                                                                                 genres, 
+                                                                                                 ignore.case = TRUE) ~ "comedy",
+                                                                                           grepl("Action", 
+                                                                                                 genres, 
+                                                                                                 ignore.case = TRUE) ~ "action/adventure",
+                                                                                           grepl("Adventure", 
+                                                                                                 genres, 
+                                                                                                 ignore.case = TRUE) ~ "action/adventure",
+                                                                                           grepl("Animation", 
+                                                                                                 genres, 
+                                                                                                 ignore.case = TRUE) ~ "animation",
+                                                                                           grepl("Drama", 
+                                                                                                 genres, 
+                                                                                                 ignore.case = TRUE) ~ "drama",
+                                                                                           TRUE ~ "other"))
+                                              )
+df_imdb_details <- df_imdb_details %>% mutate(profitMarginBinned = as.factor(ntile(profit_margin, 4)))
+
 df_imdb_details_movies_only   <- df_imdb_details %>% filter(type == "Movie")
 df_imdb_details_tvseries_only <- df_imdb_details %>% filter(type == "TVSeries")
 
@@ -72,6 +134,7 @@ df_imdb_details_movies_top_directors_only <- df_imdb_details_movies_only %>% fil
 ggplot(df_imdb_details_movies_only %>% drop_na(profit_margin) %>% filter((year >= 1990) & (year <= 2019)), aes_string(x="profit_margin")) + 
   geom_histogram(aes(y=..density..), colour="black", fill="grey", alpha = 0.5) +
   geom_density(alpha=.2, fill="#FF6666") +
+  ggtitle("distribution of gross profit") +
   xlim(-5,5)
 
 
@@ -79,7 +142,7 @@ for (i in names(df_imdb_details_movies_only)) {
   var_type <- class(df_imdb_details[[i]])
   if (var_type %in% c("numeric", "integer")) {
     print(paste0("making histogram for ", i))
-    png(file.path("_assets", paste0("eda__histogram_",i,".png")), 
+    png(file.path("_assets/_eda", paste0("eda__histogram_",i,".png")), 
         width=1200, 
         height=900, 
         pointsize=24)
@@ -95,27 +158,84 @@ for (i in names(df_imdb_details_movies_only)) {
 }
 
 #### box plots
-names(df_imdb_details_movies_only)
-
-boxplot_output <- ggplot(df_imdb_details_movies_only, aes_string(x="metacriticRatingBinned", y="grossWorldwide")) +
+###### Profit Margin
+png(file.path("/_eda", paste0("eda__boxplot_profitMargin_vs_binnedbudget.png")), 
+    width=1200, 
+    height=900, 
+    pointsize=24)
+boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(!is.na(budgetBinned)), aes_string(x="budgetBinned", y="profit_margin")) +
   geom_boxplot() +
-  ggtitle('TBD') 
+  ggtitle('Profit Margin across Binned Metacritic Scores') +
+  ylim(-1.5, 1.5)
 print(boxplot_output)
+dev.off()
 
-boxplot_output <- ggplot(df_imdb_details_movies_only, aes_string(x="metacriticRatingBinned", y="runtime")) +
+png(file.path("_assets/_eda", paste0("eda__boxplot_profitMargin_vs_genre_binned.png")), 
+    width=1200, 
+    height=900, 
+    pointsize=24)
+boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(!is.na(genre_binned)), aes_string(x="genre_binned", y="profit_margin")) +
   geom_boxplot() +
-  ggtitle('TBD') 
+  ggtitle('Profit Margin across Genres') +
+  ylim(-1.5, 1.5)
 print(boxplot_output)
+dev.off()
 
-boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(between(year, 1990, 2000)), aes_string(x="metacriticRatingBinned", y="runtime")) +
+png(file.path("_assets/_eda", paste0("eda__boxplot_profitMargin_vs_year.png")), 
+    width=1200, 
+    height=900, 
+    pointsize=24)
+boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(!is.na(year_category)), aes_string(x="year_category", y="profit_margin")) +
   geom_boxplot() +
-  ggtitle('TBD') 
+  ggtitle('Profit Margin Over the Years') +
+  ylim(-1.5, 1.5)
 print(boxplot_output)
+dev.off()
 
-boxplot_output <- ggplot(df_imdb_details_movies_top_directors_only, aes_string(x="directors", y="metacriticRating")) +
+png(file.path("_assets/_eda", paste0("eda__boxplot_profitMargin_vs_biographical.png")), 
+    width=1200, 
+    height=900, 
+    pointsize=24)
+boxplot_output <- ggplot(df_imdb_details_movies_only, aes_string(x="biographical", y="profit_margin")) +
   geom_boxplot() +
-  ggtitle('TBD') 
+  ggtitle('Profit Margin vs. Whether the Film is Biographical or Not') +
+  ylim(-1.5, 1.5)
 print(boxplot_output)
+dev.off()
+
+png(file.path("_assets/_eda", paste0("eda__boxplot_profitMargin_vs_basedOnNovel.png")), 
+    width=1200, 
+    height=900, 
+    pointsize=24)
+boxplot_output <- ggplot(df_imdb_details_movies_only, aes_string(x="based_on_novel", y="profit_margin")) +
+  geom_boxplot() +
+  ggtitle('Profit Margin vs. Whether the Film is Based on a Novel or Not') +
+  ylim(-1.5, 1.5)
+print(boxplot_output)
+dev.off()
+
+
+###### Oscar Nomination
+png(file.path("_assets/_eda", paste0("eda__boxplot_runtime_vs_oscarNom.png")), 
+    width=1200, 
+    height=900, 
+    pointsize=24)
+boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(between(year, 1990, 2000)), aes_string(x="oscar_nom", y="runtime")) +
+  geom_boxplot() +
+  ggtitle('Runtime for Movies that Recieved an Oscar Nomination vs Not') 
+print(boxplot_output)
+dev.off()
+
+png(file.path("_assets/_eda", paste0("eda__boxplot_budget_vs_oscarNom.png")), 
+    width=1200, 
+    height=900, 
+    pointsize=24)
+boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(between(year, 1990, 2000)), aes_string(x="oscar_nom", y="budget")) +
+  geom_boxplot() +
+  ggtitle('Runtime for Movies that Recieved an Oscar Nomination vs Not') +
+  ylim(-0.5,3e08)
+print(boxplot_output)
+dev.off()
 
 ## for stars and writers
 ##

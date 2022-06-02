@@ -121,7 +121,7 @@ df_imdb_details <- df_imdb_details %>% select(oscar_nom,
 
 df_movies       <- df_imdb_details %>% filter(type == "Movie")
 df_tvseries     <- df_imdb_details %>% filter(type == "TVSeries")
-
+table(df_movies$oscar_nom)
 # 
 data_split <- initial_split(df_movies, prop = 3/4)
 df_train <- training(data_split)
@@ -132,7 +132,7 @@ folds <- vfold_cv(df_train, v = 10)
 recipe__lr_oscar_nom <- 
   recipe(oscar_nom ~ ., data = df_train) %>% 
   update_role(id, title, type, new_role = "id variable") %>%
-  step_rose(oscar_nom) %>%
+  #step_rose(oscar_nom) %>%
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_predictors()) %>%
@@ -147,7 +147,7 @@ recipe__lr_oscar_nom <-
     impute_with = imp_vars(year))
 
 lr_mod <- 
-  logistic_reg(penalty = 0.005, mixture = 0.3) %>% 
+  logistic_reg(penalty = 0.0001, mixture = 0.03) %>% 
   set_engine("glmnet")
 
 lr_reg_grid <- tibble(penalty = 10^seq(-4, -1, length.out = 30),
@@ -177,6 +177,7 @@ lr_plot <-
   geom_point() + 
   geom_line() + 
   ylab("Area under the ROC Curve") +
+  ggtitle("ROC AUC for Different Penalty Terms") +
   scale_x_log10(labels = scales::label_number())
 
 lr_plot 
@@ -215,8 +216,6 @@ pred__lr_oscar_nom %>%
 pred__lr_oscar_nom %>%
   roc_auc(event_level = "second", truth = oscar_nom, .pred_1)
 
-<<<<<<< HEAD
-
 conf_mat(pred__lr_oscar_nom, oscar_nom, .pred_class)
 
 best_model <- 
@@ -234,9 +233,8 @@ lr_auc <-
 
 autoplot(lr_auc)
 
-=======
-  conf_mat(pred__lr_oscar_nom, oscar_nom, .pred_class)
->>>>>>> f06869f879c1369f26558edfeb013cba06de88e7
+conf_mat(pred__lr_oscar_nom, oscar_nom, .pred_class)
+
 
 final_wf %>%
   last_fit(data_split) %>%            

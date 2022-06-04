@@ -170,7 +170,7 @@ k_nearest_neighbors <- function(data, fullTitleName, num_movies) {
     rename(`Full Title` = fullTitle,
            Year = year,
            `Runtime Minutes` = runtime,
-           `IMDB Rating` = imDbRating,
+           `IMDb Rating` = imDbRating,
            `Budget $` = budget,
            `Gross USA $` = grossUSA,
            `Gross Worldwide $` = grossWorldwide,
@@ -194,13 +194,13 @@ plot1_function <- function(movie_info) {
     ggplot(aes(n, word, fill = factor(word))) + 
     geom_col(show.legend = F) + 
     ylab("Word") +
-    ggtitle("Most Common Words in Plots from 50 Nearest Movies") +
+    ggtitle("Most Common Words in Plots") +
     theme_minimal() + 
     scale_x_continuous(breaks = seq(0, 100, 4), expand = c(0,0)) +
-    theme(plot.title = element_text(size = 35, face = "bold"), 
-          axis.title.x = element_text(size = 30, margin = margin(t = 20)),
-          axis.title.y = element_text(size = 30, margin = margin(r = 20)),
-          axis.text = element_text(size = 30))
+    theme(plot.title = element_text(size = 40, face = "bold"), 
+          axis.title.x = element_text(size = 40, margin = margin(t = 20)),
+          axis.title.y = element_text(size = 40, margin = margin(r = 20)),
+          axis.text = element_text(size = 40))
 }
 
 plot2_function <- function(movie_info) {
@@ -215,17 +215,17 @@ plot2_function <- function(movie_info) {
     ggplot(aes(n, word, fill = factor(word))) + 
     geom_col(show.legend = F) + 
     ylab("Genre") +
-    ggtitle("Most Common Genres from 50 Nearest Movies") +
+    ggtitle("Most Common Genres") +
     theme_minimal() + 
     scale_x_continuous(breaks = seq(0, 100, 4), expand = c(0,0)) +
-    theme(plot.title = element_text(size = 35, face = "bold"), 
-          axis.title.x = element_text(size = 30, margin = margin(t = 20)),
-          axis.title.y = element_text(size = 30, margin = margin(r = 20)),
-          axis.text = element_text(size = 30))
+    theme(plot.title = element_text(size = 40, face = "bold"), 
+          axis.title.x = element_text(size = 40, margin = margin(t = 20)),
+          axis.title.y = element_text(size = 40, margin = margin(r = 20)),
+          axis.text = element_text(size = 40))
 }
 
 plot3_function <- function(movie_info) {
-  # Most common keywords from 50 nearest movies
+  # Most common keywords
   movie_info %>%
     unnest_tokens(word, keywords, token = str_split, pattern = ",") %>%
     anti_join(stop_words) %>%
@@ -236,36 +236,36 @@ plot3_function <- function(movie_info) {
     ggplot(aes(n, word, fill = factor(word))) + 
     geom_col(show.legend = F) + 
     ylab("Keywords") +
-    ggtitle("Most Common Keywords from 50 Nearest Movies") +
+    ggtitle("Most Common Keywords") +
     theme_minimal() + 
     scale_x_continuous(breaks = seq(0, 100, 4), expand = c(0,0)) +
-    theme(plot.title = element_text(size = 35, face = "bold"), 
-          axis.title.x = element_text(size = 30, margin = margin(t = 20)),
-          axis.title.y = element_text(size = 30, margin = margin(r = 20)),
-          axis.text = element_text(size = 30))
+    theme(plot.title = element_text(size = 40, face = "bold"), 
+          axis.title.x = element_text(size = 40, margin = margin(t = 20)),
+          axis.title.y = element_text(size = 40, margin = margin(r = 20)),
+          axis.text = element_text(size = 40))
 }
 
 plot4_function <- function(movie_info) {
-  # Top 5 highest rated movies from 50 nearest movies
+  # Top 5 highest rated movies
   movie_info %>%
     slice_max(order_by = imDbRating, n = 5) %>%
     head(5) %>%
     mutate(title = reorder(title, imDbRating)) %>%
     ggplot(aes(x = imDbRating, y = title, fill = factor(title))) +
     geom_col(show.legend = F) +
-    xlab("IMDB Rating") + 
+    xlab("IMDb Rating") + 
     ylab("Movie Title") + 
-    ggtitle("Highest IMDB Rated Movies from 50 Nearest Movies") + 
+    ggtitle("Highest IMDb Rated Movies") + 
     theme_minimal() + 
     scale_x_continuous(breaks = seq(0, 10, 1), expand = c(0,0)) +
-    theme(plot.title = element_text(size = 35, face = "bold"), 
-          axis.title.x = element_text(size = 30, margin = margin(t = 20)),
-          axis.title.y = element_text(size = 30, margin = margin(r = 20)),
-          axis.text = element_text(size = 30))
+    theme(plot.title = element_text(size = 40, face = "bold"), 
+          axis.title.x = element_text(size = 40, margin = margin(t = 20)),
+          axis.title.y = element_text(size = 40, margin = margin(r = 20)),
+          axis.text = element_text(size = 40))
 }
 
 plot5_function <- function(movie_info) {
-  # Top 5 highest grossUSA movies from 50 nearest movies
+  # Top 5 highest grossUSA movies
   require(scales)
   movie_info %>%
     slice_max(order_by = grossUSA, n = 5) %>%
@@ -275,13 +275,13 @@ plot5_function <- function(movie_info) {
     geom_col(show.legend = F) +
     ylab("Movie Title") + 
     xlab("US Gross ($)") +
-    ggtitle("Highest US Gross Movies from 50 Nearest Movies") + 
+    ggtitle("Highest US Gross Movies") + 
     theme_minimal() +
     scale_x_continuous(labels = comma, breaks = seq(0, 1000000000, 100000000), expand = c(0,0)) +
-    theme(plot.title = element_text(size = 35, face = "bold"), 
-          axis.title.x = element_text(size = 30, margin = margin(t = 20)),
-          axis.title.y = element_text(size = 30, margin = margin(r = 20)),
-          axis.text = element_text(size = 30))
+    theme(plot.title = element_text(size = 40, face = "bold"), 
+          axis.title.x = element_text(size = 40, margin = margin(t = 20)),
+          axis.title.y = element_text(size = 40, margin = margin(r = 20)),
+          axis.text = element_text(size = 40))
 }
 ```
 
@@ -290,7 +290,13 @@ plot5_function <- function(movie_info) {
 This is the max grossUSA movie (Did not win an oscar)
 ```{r}
 ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Star Wars: Episode VII - The Force Awakens (2015)", 10)
-ten_nearest_movies
+ten_nearest_movies_latex <- xtable::xtable(ten_nearest_movies %>% 
+                                             dplyr::select(`Full Title`, `Gross USA $`, oscar_won) %>%
+                                             rename(`Oscar Won` = oscar_won), 
+                                           caption = "The Nearest Movies to Star Wars: Episode VII - The Force Awakens (2015)")
+
+output <- print(ten_nearest_movies_latex, include.rownames=FALSE, table.placement="H")
+writeLines(output, file.path("/Users/ajaypatel21/_assets/", "star_wars_table.tex"))
 
 fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Star Wars: Episode VII - The Force Awakens (2015)", 50)
 
@@ -309,33 +315,45 @@ plot5_function(movie_info)
 ```
 
 
-## Avatar (2009)
-This is the max grossWorldwide movie (Also won an oscar)
-```{r}
-ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Avatar (2009)", 10)
-ten_nearest_movies
-
-fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Avatar (2009)", 50)
-
-# Extracting titles from 50 nearest movies
-titles <- fifty_nearest_movies$`Full Title`
-  
-movie_info <- imdb_details_extd_extra %>%
-  filter(fullTitle %in% titles) %>%
-  dplyr::select(X, id, title, type, year, imDbRating, genres, plot, keywords, grossUSA)
-
 plot1_function(movie_info)
 plot2_function(movie_info)
 plot3_function(movie_info)
-plot4_function(movie_info)
-plot5_function(movie_info)
-```
+
+<!-- ## Avatar (2009) -->
+<!-- This is the max grossWorldwide movie (Also won an oscar) -->
+<!-- ```{r} -->
+<!-- ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Avatar (2009)", 10) -->
+<!-- ten_nearest_movies -->
+
+<!-- fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Avatar (2009)", 50) -->
+
+<!-- # Extracting titles from 50 nearest movies -->
+<!-- titles <- fifty_nearest_movies$`Full Title` -->
+
+<!-- movie_info <- imdb_details_extd_extra %>% -->
+<!--   filter(fullTitle %in% titles) %>% -->
+<!--   dplyr::select(X, id, title, type, year, imDbRating, genres, plot, keywords, grossUSA) -->
+
+<!-- plot1_function(movie_info) -->
+<!-- plot2_function(movie_info) -->
+<!-- plot3_function(movie_info) -->
+<!-- plot4_function(movie_info) -->
+<!-- plot5_function(movie_info) -->
+<!-- ``` -->
 
 ## The Godfather (1972)
 The Godfather has the highest metacritic rating and imdb rating of movies that won an oscar
 ```{r}
 ten_nearest_movies <-  k_nearest_neighbors(knn_data, "The Godfather (1972)", 10)
 ten_nearest_movies
+
+ten_nearest_movies_latex <- xtable::xtable(ten_nearest_movies %>% 
+                                             dplyr::select(`Full Title`, `Metacritic Rating`, `IMDb Rating`, oscar_won) %>% 
+                                             rename(`Oscar Won` = oscar_won), 
+                                           caption = "The Nearest Movies to The Godfather (1972)")
+
+output <- print(ten_nearest_movies_latex, include.rownames=FALSE, table.placement="H")
+writeLines(output, file.path("/Users/ajaypatel21/_assets/", "godfather_table.tex"))
 
 fifty_nearest_movies <- k_nearest_neighbors(knn_data, "The Godfather (1972)", 50)
 
@@ -353,51 +371,54 @@ plot4_function(movie_info)
 plot5_function(movie_info)
 ```
 
-
-## Rear Window (1954)
-Rear Window (Alfred Hitchcock movie) has the highest metacritic rating and imdb rating of movies that did not win an oscar
-```{r}
-ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Rear Window (1954)", 10)
-ten_nearest_movies
-
-fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Rear Window (1954)", 50)
-
-# Extracting titles from 50 nearest movies
-titles <- fifty_nearest_movies$`Full Title`
-  
-movie_info <- imdb_details_extd_extra %>%
-  filter(fullTitle %in% titles) %>%
-  dplyr::select(X, id, title, type, year, imDbRating, genres, plot, keywords, grossUSA)
-
-plot1_function(movie_info)
 plot2_function(movie_info)
 plot3_function(movie_info)
-plot4_function(movie_info)
-plot5_function(movie_info)
-```
 
 
-## Avengers: Endgame (2019)
-Avengers: Endgame (2019) has the highest Worldwide Gross of movies that did not win an oscar
-```{r}
-ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Avengers: Endgame (2019)", 10)
-ten_nearest_movies
+<!-- ## Rear Window (1954) -->
+<!-- Rear Window (Alfred Hitchcock movie) has the highest metacritic rating and imdb rating of movies that did not win an oscar -->
+<!-- ```{r} -->
+<!-- ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Rear Window (1954)", 10) -->
+<!-- ten_nearest_movies -->
 
-fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Avengers: Endgame (2019)", 50)
+<!-- fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Rear Window (1954)", 50) -->
 
-# Extracting titles from 50 nearest movies
-titles <- fifty_nearest_movies$`Full Title`
-  
-movie_info <- imdb_details_extd_extra %>%
-  filter(fullTitle %in% titles) %>%
-  dplyr::select(X, id, title, type, year, imDbRating, genres, plot, keywords, grossUSA)
+<!-- # Extracting titles from 50 nearest movies -->
+<!-- titles <- fifty_nearest_movies$`Full Title` -->
 
-plot1_function(movie_info)
-plot2_function(movie_info)
-plot3_function(movie_info)
-plot4_function(movie_info)
-plot5_function(movie_info)
-```
+<!-- movie_info <- imdb_details_extd_extra %>% -->
+<!--   filter(fullTitle %in% titles) %>% -->
+<!--   dplyr::select(X, id, title, type, year, imDbRating, genres, plot, keywords, grossUSA) -->
+
+<!-- plot1_function(movie_info) -->
+<!-- plot2_function(movie_info) -->
+<!-- plot3_function(movie_info) -->
+<!-- plot4_function(movie_info) -->
+<!-- plot5_function(movie_info) -->
+<!-- ``` -->
+
+
+<!-- ## Avengers: Endgame (2019) -->
+<!-- Avengers: Endgame (2019) has the highest Worldwide Gross of movies that did not win an oscar -->
+<!-- ```{r} -->
+<!-- ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Avengers: Endgame (2019)", 10) -->
+<!-- ten_nearest_movies -->
+
+<!-- fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Avengers: Endgame (2019)", 50) -->
+
+<!-- # Extracting titles from 50 nearest movies -->
+<!-- titles <- fifty_nearest_movies$`Full Title` -->
+
+<!-- movie_info <- imdb_details_extd_extra %>% -->
+<!--   filter(fullTitle %in% titles) %>% -->
+<!--   dplyr::select(X, id, title, type, year, imDbRating, genres, plot, keywords, grossUSA) -->
+
+<!-- plot1_function(movie_info) -->
+<!-- plot2_function(movie_info) -->
+<!-- plot3_function(movie_info) -->
+<!-- plot4_function(movie_info) -->
+<!-- plot5_function(movie_info) -->
+<!-- ``` -->
 
 
 ## Forrest Gump (1994)
@@ -405,6 +426,14 @@ From class Thursday
 ```{r}
 ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Forrest Gump (1994)", 10)
 ten_nearest_movies
+
+ten_nearest_movies_latex <- xtable::xtable(ten_nearest_movies %>% 
+                                             dplyr::select(`Full Title`, `Gross USA $`, oscar_won) %>%
+                                             rename(`Oscar Won` = oscar_won), 
+                                           caption = "The Nearest Movies to Forrest Gump (1994)")
+
+output <- print(ten_nearest_movies_latex, include.rownames=FALSE, table.placement="H")
+writeLines(output, file.path("/Users/ajaypatel21/_assets/", "forrest_gump_table.tex"))
 
 fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Forrest Gump (1994)", 50)
 
@@ -422,28 +451,31 @@ plot4_function(movie_info)
 plot5_function(movie_info)
 ```
 
-
-## Titanic (1997)
-Has the most Oscars won and nominations
-```{r}
-ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Titanic (1997)", 10)
-ten_nearest_movies
-
-fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Titanic (1997)", 50)
-
-# Extracting titles from 50 nearest movies
-titles <- fifty_nearest_movies$`Full Title`
-  
-movie_info <- imdb_details_extd_extra %>%
-  filter(fullTitle %in% titles) %>%
-  dplyr::select(X, id, title, type, year, imDbRating, genres, plot, keywords, grossUSA)
-
 plot1_function(movie_info)
 plot2_function(movie_info)
-plot3_function(movie_info)
-plot4_function(movie_info)
-plot5_function(movie_info)
-```
+
+
+<!-- ## Titanic (1997) -->
+<!-- Has the most Oscars won and nominations -->
+<!-- ```{r} -->
+<!-- ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Titanic (1997)", 10) -->
+<!-- ten_nearest_movies -->
+
+<!-- fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Titanic (1997)", 50) -->
+
+<!-- # Extracting titles from 50 nearest movies -->
+<!-- titles <- fifty_nearest_movies$`Full Title` -->
+
+<!-- movie_info <- imdb_details_extd_extra %>% -->
+<!--   filter(fullTitle %in% titles) %>% -->
+<!--   dplyr::select(X, id, title, type, year, imDbRating, genres, plot, keywords, grossUSA) -->
+
+<!-- plot1_function(movie_info) -->
+<!-- plot2_function(movie_info) -->
+<!-- plot3_function(movie_info) -->
+<!-- plot4_function(movie_info) -->
+<!-- plot5_function(movie_info) -->
+<!-- ``` -->
 
 
 ## Finding Nemo (2003)
@@ -452,6 +484,15 @@ Note, Toy Story 4, Toy Story 3, and Frozen had higher US gross but their genres 
 ```{r}
 ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Finding Nemo (2003)", 10)
 ten_nearest_movies
+
+ten_nearest_movies_latex <- xtable::xtable(ten_nearest_movies %>% 
+                                             dplyr::select(`Full Title`, `Gross USA $`, oscar_won, Comedy) %>% 
+                                             mutate(Comedy = as.integer(Comedy)) %>%
+                                             rename(`Oscar Won` = oscar_won), 
+                                           caption = "The Nearest Movies to Finding Nemo (2003)")
+
+output <- print(ten_nearest_movies_latex, include.rownames=FALSE, table.placement="H")
+writeLines(output, file.path("/Users/ajaypatel21/_assets/", "finding_nemo_table.tex"))
 
 fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Finding Nemo (2003)", 50)
 
@@ -477,6 +518,15 @@ Note, there were other movies that had higher US gross but their genres were not
 ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Despicable Me 2 (2013)", 10)
 ten_nearest_movies
 
+ten_nearest_movies_latex <- xtable::xtable(ten_nearest_movies %>% 
+                                             dplyr::select(`Full Title`, `Gross USA $`, oscar_won, Comedy) %>% 
+                                             mutate(Comedy = as.integer(Comedy)) %>%
+                                             rename(`Oscar Won` = oscar_won), 
+                                           caption = "The Nearest Movies to Despicable Me 2 (2013)")
+
+output <- print(ten_nearest_movies_latex, include.rownames=FALSE, table.placement="H")
+writeLines(output, file.path("/Users/ajaypatel21/_assets/", "despicable_me_2_table.tex"))
+
 fifty_nearest_movies <- k_nearest_neighbors(knn_data, "Despicable Me 2 (2013)", 50)
 
 # Extracting titles from 50 nearest movies
@@ -495,7 +545,7 @@ plot5_function(movie_info)
 
 
 ## Parasite (2019)
-Parasite (2019) has the highest metacritic rating and IMDB rating of comedy movies that won an oscar
+Parasite (2019) has the highest metacritic rating and IMDb rating of comedy movies that won an oscar
 ```{r}
 ten_nearest_movies <-  k_nearest_neighbors(knn_data, "Parasite (2019)", 10)
 ten_nearest_movies

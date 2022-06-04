@@ -147,7 +147,7 @@ recipe__lr_oscar_nom <-
     impute_with = imp_vars(year))
 
 lr_mod <- 
-  logistic_reg(penalty = 0.0001, mixture = 0.03) %>% 
+  logistic_reg(penalty = 0.005, mixture = 0.3) %>% 
   set_engine("glmnet")
 
 lr_reg_grid <- tibble(penalty = 10^seq(-4, -1, length.out = 30),

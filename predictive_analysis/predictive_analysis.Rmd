@@ -618,6 +618,68 @@ yardstick::recall(pred_rf_oscar_nom, oscar_nom, .pred_class, event_level="second
 
 ## struggling
 
+df <- imdb_details_extd2 %>% 
+  mutate(
+   genre_binned           = as.factor(case_when(grepl("Adventure", 
+                                                       genres, 
+                                                       ignore.case = TRUE) ~ "Adventure",
+                                                 grepl("Comedy", 
+                                                       genres, 
+                                                       ignore.case = TRUE) ~ "Comedy",
+                                                 grepl("Crime", 
+                                                       genres, 
+                                                       ignore.case = TRUE) ~ "Crime",
+                                                grepl("Drama", 
+                                                       genres, 
+                                                       ignore.case = TRUE) ~ "Drama",
+                                                grepl("Action", 
+                                                       genres, 
+                                                       ignore.case = TRUE) ~ "Action",
+                                                grepl("Horror", 
+                                                       genres, 
+                                                       ignore.case = TRUE) ~ "Horror",
+                                                 grepl("Romance", 
+                                                       genres, 
+                                                       ignore.case = TRUE) ~ "Romance",
+                                                grepl("Thriller", 
+                                                       genres, 
+                                                       ignore.case = TRUE) ~ "Thriller",
+                                                grepl("Unknown", 
+                                                       genres, 
+                                                       ignore.case = TRUE) ~ "Unknown",
+                                                 TRUE ~ "Other")))
+
+
+
+df %>%
+  group_by(genre_binned) %>%
+  summarize(Perc_Oscar_Noms = mean(oscar_nom, na.rm = TRUE)) %>%
+  ggplot(aes(x = genre_binned, y = Perc_Oscar_Noms)) +
+  geom_bar(stat = "identity") +
+  xlab("Genre") + 
+  ylab("Proportion of Oscar Nominees") + 
+  ggtitle("Oscar Nominees By Genres") + 
+  theme_minimal() +
+  theme(plot.title = element_text(size = 15, face = "bold"), 
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        axis.text = element_text(size = 10))
+
+
+df %>%
+  group_by(release_period) %>%
+  summarize(Perc_Oscar_Noms = mean(oscar_nom, na.rm = TRUE)) %>%
+  ggplot(aes(x = release_period, y = Perc_Oscar_Noms)) +
+  geom_bar(stat = "identity") +
+  xlab("Release Period") + 
+  ylab("Proportion of Oscar Nominees") + 
+  ggtitle("Oscar Nominees By Release Period") + 
+  theme_minimal() +
+  theme(plot.title = element_text(size = 15, face = "bold"), 
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        axis.text = element_text(size = 10))
+
 ```
 
 

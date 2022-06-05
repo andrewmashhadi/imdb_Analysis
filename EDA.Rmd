@@ -1,0 +1,400 @@
+---
+title: "EDA"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+#load libraries
+```{r}
+library(MASS)
+library(dplyr)
+library(ggplot2)
+library(ggthemes)
+library(png)
+library(gridExtra)
+library(xtable)
+```
+
+
+#oscarnom
+```{r}
+on_tb <- as.matrix(factor(table(df$oscar_nom)))
+on_tb <- t(on_tb)
+on_tb <- as.data.frame(on_tb)
+colnames(on_tb) <- c("No Oscar Nom","Oscar Nom")
+
+ontbbl <- xtable(on_tb,
+                 caption = "Oscar Nomination Table",
+                 label = "tab:on")
+xxx <- print(ontbbl, include.rownames=FALSE,table.placement="H")
+writeLines(xxx,file.path("_assets", "ontb.tex"))
+
+
+```
+#gp
+```{r}
+
+png(
+file.path("_assets",
+"grossprofit_hist.png"),
+width=1080,
+height=800,
+pointsize=30 )
+
+ggplot(data = df_box, aes(inf_adjusted_gp)) +
+        geom_histogram(bins=30, fill="lightseagreen",color = "white") +
+        ylab("Frequency") + 
+        xlab("Inflation Adjusted Gross Profit") +
+        ggtitle("Histogram of Inflation Adjusted Gross Profit") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 30, face = "bold"),
+              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
+
+
+png(
+file.path("_assets",
+"grossprofit_hist_t.png"),
+width=1080,
+height=800,
+pointsize=30 )
+
+
+ggplot(data = df_box, aes(inf_adjusted_gp^.25)) +
+        geom_histogram(bins=30, fill="lightseagreen",color = "white") +
+        ylab("Frequency") + 
+        xlab("Inflation Adjusted Gross Profit^.25") +
+        ggtitle("Histogram of Inflation Adjusted Gross Profit^.25") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 30, face = "bold"),
+              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
+
+
+
+```
+
+#runtime
+```{r}
+png(
+file.path("_assets",
+"runtime_iagp.png"),
+width=1080,
+height=800,
+pointsize=30 )
+
+ggplot(data = df_box, aes(x=runtime,y=inf_adjusted_gp^.25)) +
+        geom_point(color="lightseagreen") +
+        ylab("Inflation Adjusted Gross Profit^.25") + 
+        xlab("Runtime") +
+        ggtitle("Runtime vs Inflation Adjusted Gross Profit^.25") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 30, face = "bold"),
+              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
+
+
+png(
+file.path("_assets",
+"runtime_on.png"),
+width=1080,
+height=800,
+pointsize=30 )
+
+
+ggplot(data = df, aes(x=as.factor(oscar_nom),y=runtime,fill=factor(oscar_nom))) +
+        geom_boxplot(color = "black",show.legend = F) +
+        scale_fill_manual(values=c("gray77", "goldenrod2")) +
+        ylab("Runtime") + 
+        xlab("Oscar Nominated") +
+        ggtitle("Boxplot of Runtime by Oscar Nom") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 30, face = "bold"),
+              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
+
+```
+
+
+#starpower
+```{r}
+png(
+file.path("_assets",
+"star_power_iagp.png"),
+width=1080,
+height=800,
+pointsize=30 )
+
+ggplot(data = df_box, aes(x=star_power,y=inf_adjusted_gp^.25)) +
+        geom_point(color="lightseagreen") +
+        ylab("Inflation Adjusted Gross Profit^.25") + 
+        xlab("Star Power") +
+        ggtitle("Star Power vs Inflation Adjusted Gross Profit^.25") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 30, face = "bold"),
+              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
+
+png(
+file.path("_assets",
+"star_power_on.png"),
+width=1080,
+height=800,
+pointsize=30 )
+
+
+ggplot(data = df, aes(x=as.factor(oscar_nom),y=star_power,fill=factor(oscar_nom))) +
+        geom_boxplot(color = "black",show.legend = F) +
+        scale_fill_manual(values=c("gray77", "goldenrod2")) +
+        ylab("Star Power") + 
+        xlab("Oscar Nominated") +
+        ggtitle("Boxplot of Star Power by Oscar Nom") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 30, face = "bold"),
+              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
+
+
+```
+
+
+#writer_pop
+```{r}
+png(
+file.path("_assets",
+"writer_pop_iagp.png"),
+width=1080,
+height=800,
+pointsize=30 )
+
+ggplot(data = df_box, aes(x=wr_pop,y=inf_adjusted_gp^.25)) +
+        geom_point(color="lightseagreen") +
+        ylab("Inflation Adjusted Gross Profit^.25") + 
+        xlab("Writer Popularity") +
+        ggtitle("Writer Popularity vs Inflation Adjusted Gross Profit^.25") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 30, face = "bold"),
+              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
+
+png(
+file.path("_assets",
+"writer_pop_on.png"),
+width=1080,
+height=800,
+pointsize=30 )
+
+
+ggplot(data = df, aes(x=as.factor(oscar_nom),y=wr_pop,fill=factor(oscar_nom))) +
+        geom_boxplot(color = "black",show.legend = F) +
+        scale_fill_manual(values=c("gray77", "goldenrod2")) +
+        ylab("Writer Popularity") + 
+        xlab("Oscar Nominated") +
+        ggtitle("Boxplot of Writer Popularity by Oscar Nom") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 30, face = "bold"),
+              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
+
+
+
+
+
+```
+
+#release_period
+```{r}
+png(
+file.path("_assets",
+"release_period_boxplot.png"),
+width=1080,
+height=800,
+pointsize=30 )
+
+ggplot(data = df_box, aes(x=release_period,y=inf_adjusted_gp^.25)) +
+        geom_boxplot(fill="lightseagreen", color = "black") +
+        ylab("Inflation Adjusted Gross Profit^.25") + 
+        xlab("Release Period") +
+        ggtitle("Boxplot of Gross Profit^.25 by Release Period") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 30, face = "bold"),
+              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
+
+
+#add oscarnom
+
+rp_tab <- as.data.frame.matrix(prop.table(table(factor(df$release_period),factor(df$oscar_nom)),margin=1))
+colnames(rp_tab) <- c("No Oscar Nom", "Oscar Nom")
+rptbbl <- xtable(rp_tab,
+                 caption = "Release Period Proportion by Oscar Nom",
+                 label = "tab:rpon")
+xxx <- print(rptbbl, include.rownames=TRUE,table.placement="H")
+writeLines(xxx,file.path("_assets", "rpontab.tex"))
+
+
+```
+
+#co_size and dir_pop
+```{r}
+png(
+file.path("_assets",
+"co_size_iagp_bp.png"),
+width=1080,
+height=800,
+pointsize=30 )
+
+ggplot(data = df_box, aes(x=co_size,y=inf_adjusted_gp^.25)) +
+        geom_boxplot(fill="lightseagreen", color = "black") +
+        ylab("Inflation Adjusted Gross Profit^.25") + 
+        xlab("Company Size") +
+        ggtitle("Boxplot of Gross Profit^.25 by Company Size") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 30, face = "bold"),
+              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
+
+co_tab <- as.data.frame.matrix(prop.table(table(factor(df$co_size),factor(df$oscar_nom)),margin=1))
+colnames(co_tab) <- c("No Oscar Nom", "Oscar Nom")
+
+cotbbl <- xtable(co_tab,
+                 caption = "Company Size Proportion by Oscar Nom",
+                 label = "tab:con")
+xxx <- print(cotbbl, include.rownames=TRUE,table.placement="H")
+writeLines(xxx,file.path("_assets", "contab.tex"))
+
+#add oscar plot
+
+png(
+file.path("_assets",
+"dir_pop_iagp_bp.png"),
+width=1080,
+height=800,
+pointsize=30 )
+
+ggplot(data = df_box, aes(x=dir_pop_fac,y=inf_adjusted_gp^.25)) +
+        geom_boxplot(fill="lightseagreen", color = "black") +
+        ylab("Inflation Adjusted Gross Profit^.25") + 
+        xlab("Director Popularity") +
+        ggtitle("Boxplot of Gross Profit^.25 by Director Popularity") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 30, face = "bold"),
+              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
+
+#add oscar plot
+
+di_tab <- as.data.frame.matrix(prop.table(table(factor(df$dir_pop_fac),factor(df$oscar_nom)),margin=1))
+colnames(di_tab) <- c("No Oscar Nom", "Oscar Nom")
+
+ditbbl <- xtable(di_tab,
+                 caption = "Director Popularity Proportion by Oscar Nom",
+                 label = "tab:don")
+xxx <- print(ditbbl, include.rownames=TRUE,table.placement="H")
+writeLines(xxx,file.path("_assets", "dontab.tex"))
+
+```
+
+#rating
+```{r}
+png(
+file.path("_assets",
+"rating_iagp_bp.png"),
+width=1080,
+height=800,
+pointsize=30 )
+
+ggplot(data = df_box, aes(x=rating,y=inf_adjusted_gp^.25)) +
+        geom_boxplot(fill="lightseagreen", color = "black") +
+        ylab("Inflation Adjusted Gross Profit^.25") + 
+        xlab("Rating") +
+        ggtitle("Boxplot of Gross Profit^.25 by Rating") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 30, face = "bold"),
+              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
+
+#add oscar
+
+ra_tab <- as.data.frame.matrix(prop.table(table(factor(df$rating),factor(df$oscar_nom)),margin=1))
+colnames(ra_tab) <- c("No Oscar Nom", "Oscar Nom")
+
+ratbbl <- xtable(ra_tab,
+                 caption = "Rating Proportion by Oscar Nom",
+                 label = "tab:ron")
+xxx <- print(ratbbl, include.rownames=TRUE,table.placement="H")
+writeLines(xxx,file.path("_assets", "rantab.tex"))
+```
+#genre
+```{r}
+png(
+file.path("_assets",
+"genre_iagp_bp.png"),
+width=1080,
+height=800,
+pointsize=30 )
+
+ggplot(data = df_box, aes(x=genre,y=inf_adjusted_gp^.25)) +
+        geom_boxplot(fill="lightseagreen", color = "black") +
+        ylab("Inflation Adjusted Gross Profit^.25") + 
+        xlab("Genre") +
+        ggtitle("Boxplot of Gross Profit^.25 by Genre") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 30, face = "bold"),
+              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
+
+#need oscar nom
+
+gn_tab <- as.data.frame.matrix(prop.table(table(factor(df$genre),factor(df$oscar_nom)),margin=1))
+colnames(gn_tab) <- c("No Oscar Nom", "Oscar Nom")
+
+gntbbl <- xtable(gn_tab,
+                 caption = "Genre Proportion by Oscar Nom",
+                 label = "tab:gnon")
+xxx <- print(gntbbl, include.rownames=TRUE,table.placement="H")
+writeLines(xxx,file.path("_assets", "gnontab.tex"))
+```
+
+
+#adj budget
+```{r}
+options(scipen=999)
+png(
+file.path("_assets",
+"budget_on.png"),
+width=1080,
+height=800,
+pointsize=30 )
+
+
+ggplot(data = df, aes(x=as.factor(oscar_nom),y=budget_adj, fill=factor(oscar_nom))) +
+        geom_boxplot(color = "black",show.legend = F) +
+        scale_fill_manual(values=c("gray77", "goldenrod2")) +
+        ylab("Inflation Adjusted Budget") +
+        xlab("Oscar Nominated") +
+        ggtitle("Boxplot of Inflation Adjusted Budget by Oscar Nom") +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 30, face = "bold"),
+              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
+```
+

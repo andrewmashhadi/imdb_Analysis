@@ -63,10 +63,12 @@ df_imdb_details <- df_imdb_details %>% mutate(grossUSABinned = cut(grossUSA, bre
 df_imdb_details <- df_imdb_details %>% mutate(month                  = as.factor(substr(as.character(date),5,6)),
                                               grossUSA               = ifelse(is.na(grossUSA), 0, grossUSA),
                                               grossWorldwide         = ifelse(is.na(grossWorldwide), 0, grossWorldwide),
-                                              metacriticRatingBinned = cut(metacriticRating, breaks=5),
+                                              metacriticRatingBinned = as.factor(ntile(metacriticRating, 10)),
                                               profit_margin          = (grossWorldwide-budget)/grossWorldwide,
+                                              profit                 = (grossWorldwide-budget),
                                               budgetBinned           = as.factor(ntile(budget, 4)),
                                               grossUSABinned         = cut(grossUSA, breaks=10),
+                                              runtimeBinned          = cut(runtime, breaks=5),
                                               month                  = as.factor(substring(date,5,2)),
                                               year_category          = as.factor(case_when(year >= 1960 & year < 1970 ~ "1960-1970",
                                                                                            year >= 1970 & year < 1980 ~ "1970-1980",
@@ -163,10 +165,21 @@ png(file.path("/_eda", paste0("eda__boxplot_profitMargin_vs_binnedbudget.png")),
     width=1200, 
     height=900, 
     pointsize=24)
-boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(!is.na(budgetBinned)), aes_string(x="budgetBinned", y="profit_margin")) +
+boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(!is.na(budgetBinned)), aes_string(x="budgetBinned", y="profit")) +
   geom_boxplot() +
   ggtitle('Profit Margin across Binned Metacritic Scores') +
-  ylim(-1.5, 1.5)
+  ylim(-2e6, 1e6)
+print(boxplot_output)
+dev.off()
+
+png(file.path("_assets/_eda", paste0("eda__boxplot_profit_vs_runtime_binned.png")), 
+    width=1200, 
+    height=900, 
+    pointsize=24)
+boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(!is.na(runtimeBinned)), aes_string(x="runtimeBinned", y="profit")) +
+  geom_boxplot() +
+  ggtitle('Profit Margin across Genres') +
+  ylim(-2e6, 1e6)
 print(boxplot_output)
 dev.off()
 
@@ -226,11 +239,14 @@ boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(between(year, 19
 print(boxplot_output)
 dev.off()
 
-png(file.path("_assets/_eda", paste0("eda__boxplot_budget_vs_oscarNom.png")), 
+png(file.path("_assets/_eda", paste0("eda__boxplot_budget_vs_metacritic_binned.png")), 
     width=1200, 
     height=900, 
     pointsize=24)
-boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(between(year, 1990, 2000)), aes_string(x="oscar_nom", y="budget")) +
+boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter((between(year, 1990, 2000)) 
+                                                                & (!is.na(metacriticRatingBinned))
+                                                                ), 
+                         aes_string(x="metacriticRatingBinned", y="budget")) +
   geom_boxplot() +
   ggtitle('Runtime for Movies that Recieved an Oscar Nomination vs Not') +
   ylim(-0.5,3e08)

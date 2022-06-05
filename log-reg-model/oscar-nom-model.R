@@ -15,8 +15,11 @@ xpath_main_data <- Sys.getenv("PATH_MY_MAIN_DATA")
 setwd(paste0(xpath_main_data,"/imdb-analysis/log-reg-model"))
 
 # ---- create asset folder ---- #
-if(!dir.exists("_assets")) {                                                    # create folder for photos from IMDB
+if(!dir.exists("_assets")) {                                                    # create assets
   dir.create("_assets")
+}
+if(!dir.exists("_assets/log-reg-plots")) {                                      # create log-reg folder within assets
+  dir.create("_assets/log-reg-plots")
 }
 # ---- set options ---- #
 options(width=90, xtable.comment=FALSE, stringsAsFactors=FALSE)
@@ -29,9 +32,9 @@ library(tibble)
 library(ggplot2)
 library(themis)
 library(tidymodels)
+library(broom)
 library(glmnet)
 library(dotwhisker) 
-
 library(dplyr)
 library(tidyr)
 library(caret)
@@ -81,6 +84,9 @@ df_imdb_details <- df_imdb_details %>%
     profit_margin          = (grossWorldwide-budget)/grossWorldwide,
     grossUSABinned         = cut(grossUSA, breaks=10),
     month                  = as.factor(substring(date,5,2)),
+    runtime                = runtime/30,
+    budget                 = budget/10e6,
+    month                  = as.factor(substring(date,5,2)),
     year_category          = as.factor(case_when(year >= 1990 & year < 2000 ~ "1990-2000",
                                                  year >= 2000 & year < 2010 ~ "2000-2010",
                                                  year >= 2010 ~ "2010+")),
@@ -104,8 +110,7 @@ df_imdb_details <- df_imdb_details %>%
                                                  grepl("Drama", 
                                                        genres, 
                                                        ignore.case = TRUE) ~ "drama",
-                                                 TRUE ~ "other"))
-  )
+                                                 TRUE ~ "other")))
 
 df_imdb_details <- df_imdb_details %>% select(oscar_nom,
                                               id, 
@@ -121,21 +126,28 @@ df_imdb_details <- df_imdb_details %>% select(oscar_nom,
 
 df_movies       <- df_imdb_details %>% filter(type == "Movie")
 df_tvseries     <- df_imdb_details %>% filter(type == "TVSeries")
+
 table(df_movies$oscar_nom)
-# 
-data_split <- initial_split(df_movies, prop = 3/4)
+
+# ---- model development ---- #
+#### splitting test and train
+data_split <- initial_split(df_movies, strata = oscar_nom, prop = 3/4)
 df_train <- training(data_split)
 df_test  <- testing(data_split)
 
-folds <- vfold_cv(df_train, v = 10)
+#### split train into train and validation
+val_set <- validation_split(df_train, 
+                            strata = oscar_nom, 
+                            prop = 0.80)
 
-recipe__lr_oscar_nom <- 
+#### create recipe
+recipe__logreg <- 
   recipe(oscar_nom ~ ., data = df_train) %>% 
   update_role(id, title, type, new_role = "id variable") %>%
-  #step_rose(oscar_nom) %>%
+  step_rose(oscar_nom) %>%
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
-  step_normalize(all_predictors()) %>%
+  #step_normalize(all_predictors()) %>%
   step_impute_linear(
     runtime,
     impute_with = imp_vars(year)) %>%
@@ -146,30 +158,31 @@ recipe__lr_oscar_nom <-
     budget,
     impute_with = imp_vars(year))
 
-lr_mod <- 
-  logistic_reg(penalty = 0.0001, mixture = 0.03) %>% 
+#### create model
+model__logreg <- 
+  logistic_reg(penalty = tune(), mixture = 0.03) %>%  
+  #logistic_reg(penalty = 0.0001, mixture = 0.03) %>% 
   set_engine("glmnet")
 
-lr_reg_grid <- tibble(penalty = 10^seq(-4, -1, length.out = 30),
-                       mixture = seq(0, 1, length.out = 30))
-
-wflow__lr_oscar_nom <- 
+#### create workflow
+wflow__logreg <- 
   workflow() %>% 
-  add_model(lr_mod) %>% 
-  add_recipe(recipe__lr_oscar_nom)
+  add_model(model__logreg) %>% 
+  add_recipe(recipe__logreg)
 
+#### create tuning grid
+grid__penalty_grid <- tibble(penalty = 10^seq(-4, -1, length.out = 30))
 
-val_set <- validation_split(df_train, 
-                            strata = oscar_nom, 
-                            prop = 0.80)
-
+#### train / tune model
 lr_res <- 
-  wflow__lr_oscar_nom %>%
+  wflow__logreg %>% 
   tune_grid(val_set,
-            grid = lr_reg_grid,
+            grid = grid__penalty_grid,
             control = control_grid(save_pred = TRUE),
             metrics = metric_set(roc_auc))
 
+#### plot pr auc
+png( file.path("_assets/log-reg-plots", "log_reg__tuning-plot-roc-curve-1.png"), width=1200, height=900, pointsize=24 )
 lr_plot <- 
   lr_res %>% 
   collect_metrics() %>% 
@@ -177,68 +190,76 @@ lr_plot <-
   geom_point() + 
   geom_line() + 
   ylab("Area under the ROC Curve") +
-  ggtitle("ROC AUC for Different Penalty Terms") +
   scale_x_log10(labels = scales::label_number())
-
 lr_plot 
+dev.off()
 
-lr_plot <- 
+#### see best tuned parameters
+lr_res %>% 
+  show_best("pr_auc", n = 15) %>% 
+  arrange(penalty) 
+
+#### with similar performance accross different penalty values, we choose to keep
+#### a higher penalty value in order to create a more parsimonious model
+lr_best <- 
   lr_res %>% 
   collect_metrics() %>% 
-  ggplot(aes(x = mixture, y = mean)) + 
-  geom_point() + 
-  geom_line() + 
-  ylab("Area under the ROC Curve") +
-  scale_x_log10(labels = scales::label_number())
-
-lr_plot 
-
-fit_rs__lr_oscar_nom <- 
-  wflow__lr_oscar_nom %>%
-  fit_resamples(folds)
-
-fit__lr_oscar_nom <-
-  wflow__lr_oscar_nom %>%
-  fit(df_train)
-
-tidy(fit__lr_oscar_nom) %>% 
-  dwplot(dot_args = list(size = 2, color = "black"),
-         whisker_args = list(color = "black"),
-         vline = geom_vline(xintercept = 0, colour = "grey50", linetype = 2))
-
-pred__lr_oscar_nom <- 
-  predict(fit__lr_oscar_nom, df_test) %>% 
-  bind_cols(predict(fit__lr_oscar_nom, df_test, type = "prob")) %>% 
-  bind_cols(df_test %>% dplyr::select(oscar_nom))
-
-pred__lr_oscar_nom %>%
-  pr_auc(event_level = "second", truth = oscar_nom, .pred_1)
-pred__lr_oscar_nom %>%
-  roc_auc(event_level = "second", truth = oscar_nom, .pred_1)
-
-conf_mat(pred__lr_oscar_nom, oscar_nom, .pred_class)
-
-best_model <- 
-  fit_rs__lr_oscar_nom %>% 
-  collect_metrics() %>% 
   arrange(penalty) %>% 
-  slice(12)
+  slice(25)
+
 lr_best
 
+#### plot roc curve
 lr_auc <- 
-  fit__lr_oscar_nom %>% 
+  lr_res %>% 
   collect_predictions(parameters = lr_best) %>% 
-  roc_curve(children, .pred_children) %>% 
+  roc_curve(oscar_nom, .pred_0) %>% 
   mutate(model = "Logistic Regression")
 
 autoplot(lr_auc)
 
-conf_mat(pred__lr_oscar_nom, oscar_nom, .pred_class)
 
+# ---- fit final model ---- #
+# the last model
+last_model__logreg <- 
+  logistic_reg(penalty = 0.04, mixture = 0.03) %>% 
+  set_engine("glm")
 
-final_wf %>%
-  last_fit(data_split) %>%            
-  collect_predictions() %>% 
-  roc_curve(class, .pred_PS) %>% 
-  autoplot()
+# the last workflow
+last_wflow__logreg <- 
+  wflow__logreg %>% 
+  update_model(last_model__logreg)
 
+# the last fit
+last_fit__logreg <- 
+  last_wflow__logreg %>% 
+  last_fit(data_split)
+
+last_fit__logreg %>%
+  collect_metrics()
+
+# ---- validate final model ---- #
+#### confusion matrix
+conf_mat(last_fit__logreg %>%
+           collect_predictions() %>%
+           select(.pred_class,oscar_nom), 
+         oscar_nom, 
+         .pred_class)
+
+#### coefficients
+last_fit__logreg %>%
+  extract_fit_parsnip() %>% 
+  tidy() %>%
+  select(term, estimate) %>%
+  mutate(odds = exp(estimate))
+  
+#### dw plot
+png( file.path("_assets/log-reg-plots", "dwplot.png"), width=1200, height=900, pointsize=24 )
+dwplot <- last_fit__logreg %>%
+  extract_fit_parsnip() %>% 
+  tidy() %>%
+  dwplot(dot_args = list(size = 2, color = "black"),
+         whisker_args = list(color = "black"),
+         vline = geom_vline(xintercept = 0, colour = "grey50", linetype = 2))
+dwplot
+dev.off()

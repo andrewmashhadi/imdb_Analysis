@@ -1,0 +1,19 @@
+Call:
+stats::lm(formula = ..y ~ ., data = data)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-105.225  -16.969    0.344   16.779  101.017 
+
+Coefficients:
+                         Estimate Std. Error t value Pr(>|t|)    
+(Intercept)               93.9317     1.2583  74.650  < 2e-16 ***
+budget_adj                16.7476     0.7439  22.513  < 2e-16 ***
+runtime                    2.3632     0.6835   3.457 0.000557 ***
+dir_pop_fac               -0.1901     0.6980  -0.272 0.785423    
+release_periodfeb_to_apr  -0.5301     1.7848  -0.297 0.766505    
+release_periodmay_to_jul   8.4182     1.7899   4.703 2.74e-06 ***
+release_periodnov_to_jan   4.4887     1.7222   2.606 0.009221 ** 
+co_size                    4.1257     0.6689   6.167 8.42e-10 ***
+star_power                 0.1404     0.6969   0.202 0.840306    
+wr_pop                     3.2517     0.6485   5.014 5.80e-07 ***

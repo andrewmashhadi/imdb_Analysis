@@ -161,7 +161,6 @@ recipe__logreg <-
 #### create model
 model__logreg <- 
   logistic_reg(penalty = tune(), mixture = 0.03) %>%  
-  #logistic_reg(penalty = 0.0001, mixture = 0.03) %>% 
   set_engine("glmnet")
 
 #### create workflow

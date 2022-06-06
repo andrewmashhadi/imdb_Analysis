@@ -548,17 +548,30 @@ final_rf <- rand_forest(
   set_engine("ranger")
 
 # checking out importance plots (measure of how much worse predictions get w/o the var)
-final_rf %>%
+df <- final_rf %>%
   set_engine("ranger", importance = "permutation") %>%
   fit(oscar_nom ~ .,
       data = juice(tree_prep)
-  ) %>%
+  ) 
+
+df %>%
   vip(geom = "col")+
+  # scale_x_discrete(labels=rev(c("runtime",
+  #                           "budget",
+  #                           "genre is other genre",
+  #                           "Nov. to Jan. release period",
+  #                           "directory popularity",
+  #                           "star power",
+  #                           "rating, PG-13",
+  #                           "genre is drama",                     
+  #                           "rating, R",
+  #                           "writer popularity"))) +
   theme_minimal() +
   theme(plot.title = element_text(size = 30, face = "bold"), 
-        axis.title.x = element_text(size = 25, margin = ggplot2::margin(t = 20)),
-        axis.title.y = element_text(size = 25, margin = ggplot2::margin(r = 20)),
-        axis.text = element_text(size = 25))
+        axis.title.x = element_text(size = 25),
+        axis.title.y = element_text(size = 25),
+        axis.text = element_text(size = 25)) + 
+    scale_y_continuous(limit=c(0, 0.055))
 
 
 ### view metrics
@@ -671,6 +684,10 @@ df %>%
   summarize(Perc_Oscar_Noms = mean(oscar_nom, na.rm = TRUE)) %>%
   ggplot(aes(x = release_period, y = Perc_Oscar_Noms, fill= release_period)) +
   geom_bar(stat = "identity", show.legend=F) +
+  scale_x_discrete(labels=c("Aug. to Oct.", 
+                            "Feb. to Apr.",
+                            "May to July",
+                            "Nov. to Jan.")) +
   xlab("Release Period") + 
   ylab("Proportion of Oscar Nominees") + 
   ggtitle("Oscar Nominees By Release Period") + 
@@ -867,6 +884,16 @@ final_rf %>%
       data = juice(model_prep)
   ) %>%
   vip(geom = "col")+
+  # scale_x_discrete(labels=rev(c("budget",
+  #                         "runtime",
+  #                         "company size",
+  #                         "writer popularity",
+  #                         "rating, R",
+  #                         "star power",
+  #                         "May to July release period",
+  #                         "director popularity",
+  #                         "rating, PG-13",
+  #                         "Nov. to Jan. release period"))) +
   theme_minimal() +
   theme(plot.title = element_text(size = 30, face = "bold"), 
         axis.title.x = element_text(size = 25, margin = ggplot2::margin(t = 20)),

@@ -555,10 +555,10 @@ final_rf %>%
   ) %>%
   vip(geom = "col")+
   theme_minimal() +
-  theme(plot.title = element_text(size = 30), 
-          axis.title.x = element_text(size = 30),
-          axis.title.y = element_text(size = 30),
-          axis.text = element_text(size = 30))
+  theme(plot.title = element_text(size = 30, face = "bold"), 
+        axis.title.x = element_text(size = 25, margin = ggplot2::margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = ggplot2::margin(r = 20)),
+        axis.text = element_text(size = 25))
 
 
 ### view metrics
@@ -654,31 +654,31 @@ df <- imdb_details_extd2 %>%
 df %>%
   group_by(genre_binned) %>%
   summarize(Perc_Oscar_Noms = mean(oscar_nom, na.rm = TRUE)) %>%
-  ggplot(aes(x = genre_binned, y = Perc_Oscar_Noms)) +
-  geom_bar(stat = "identity") +
+  ggplot(aes(x = genre_binned, y = Perc_Oscar_Noms, fill= genre_binned)) +
+  geom_bar(stat = "identity", show.legend=F) +
   xlab("Genre") + 
   ylab("Proportion of Oscar Nominees") + 
   ggtitle("Oscar Nominees By Genres") + 
   theme_minimal() +
-  theme(plot.title = element_text(size = 15, face = "bold"), 
-        axis.title.x = element_text(size = 10),
-        axis.title.y = element_text(size = 10),
-        axis.text = element_text(size = 10))
+  theme(plot.title = element_text(size = 25, face = "bold"), 
+        axis.title.x = element_text(size = 17, margin = ggplot2::margin(t = 20)),
+        axis.title.y = element_text(size = 17, margin = ggplot2::margin(r = 20)),
+        axis.text = element_text(size = 17))
 
 
 df %>%
   group_by(release_period) %>%
   summarize(Perc_Oscar_Noms = mean(oscar_nom, na.rm = TRUE)) %>%
-  ggplot(aes(x = release_period, y = Perc_Oscar_Noms)) +
-  geom_bar(stat = "identity") +
+  ggplot(aes(x = release_period, y = Perc_Oscar_Noms, fill= release_period)) +
+  geom_bar(stat = "identity", show.legend=F) +
   xlab("Release Period") + 
   ylab("Proportion of Oscar Nominees") + 
   ggtitle("Oscar Nominees By Release Period") + 
   theme_minimal() +
-  theme(plot.title = element_text(size = 15, face = "bold"), 
-        axis.title.x = element_text(size = 10),
-        axis.title.y = element_text(size = 10),
-        axis.text = element_text(size = 10))
+  theme(plot.title = element_text(size = 28, face = "bold"), 
+        axis.title.x = element_text(size = 26, margin = ggplot2::margin(t = 20)),
+        axis.title.y = element_text(size = 26, margin = ggplot2::margin(r = 20)),
+        axis.text = element_text(size = 26))
 
 ```
 
@@ -868,39 +868,48 @@ final_rf %>%
   ) %>%
   vip(geom = "col")+
   theme_minimal() +
-  theme(plot.title = element_text(size = 30), 
-          axis.title.x = element_text(size = 30),
-          axis.title.y = element_text(size = 30),
-          axis.text = element_text(size = 30))
+  theme(plot.title = element_text(size = 30, face = "bold"), 
+        axis.title.x = element_text(size = 25, margin = ggplot2::margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = ggplot2::margin(r = 20)),
+        axis.text = element_text(size = 25))
+
+
 
 
 ## eda 
 
 r2 <- (cor(imdb_details_extd3$inf_adjusted_gp, imdb_details_extd3$budget_adj,use = "na.or.complete"))^2
 
-ggplot(imdb_details_extd3, aes(budget_adj, inf_adjusted_gp)) + 
+ggplot(imdb_details_extd3, aes(x=budget_adj, y=inf_adjusted_gp)) + 
 geom_point() + 
-geom_smooth(method='lm', formula= y~x) + 
-##geom_text(x=25,y=3.5e8, label = paste("R^2: ", r2, sep=""), parse = TRUE) +
-geom_col(show.legend = F) + 
 ylab("Gross Profit^.25") +
-xlab("Budget") +
+xlab("Budget (in units of $1,000,000)") +
 ggtitle("Gross Profit^.25 Vs Budget") +
 theme_minimal() + 
-theme(plot.title = element_text(size = 15, face = "bold"))
+ylim(0, 350) +
+scale_x_continuous(labels = scales::label_comma(scale = 1e-6)) +
+theme(plot.title = element_text(size = 35, face = "bold"), 
+      axis.title.x = element_text(size = 30, margin = ggplot2::margin(t = 20)),
+      axis.title.y = element_text(size = 30, margin = ggplot2::margin(r = 20)),
+      axis.text = element_text(size = 30))
+
+
 
 r2 <- (cor(imdb_details_extd3$inf_adjusted_gp, imdb_details_extd3$runtime,use = "na.or.complete"))^2
 
-ggplot(imdb_details_extd3, aes(inf_adjusted_gp, runtime)) + 
-geom_point() + 
-geom_smooth(method='lm', formula= y~x) + 
-##geom_text(x=25,y=3.5e8, label = paste("R^2: ", r2, sep=""), parse = TRUE) +
-geom_col(show.legend = F) + 
-xlab("Gross Profit^.25") +
-ylab("Runtime") +
+ggplot(imdb_details_extd3, aes(x=runtime, y=inf_adjusted_gp)) + 
+geom_point()  + 
+ylab("Gross Profit^.25") +
+xlab("Runtime") +
 ggtitle("Gross Profit^.25 vs Runtime") +
 theme_minimal() + 
-theme(plot.title = element_text(size = 15, face = "bold"))
+#ylim(70, 250) +
+#scale_x_continuous(labels = scales::label_comma(scale = 1e-6)) +
+theme(plot.title = element_text(size = 35, face = "bold"), 
+      axis.title.x = element_text(size = 30, margin = ggplot2::margin(t = 20)),
+      axis.title.y = element_text(size = 30, margin = ggplot2::margin(r = 20)),
+      axis.text = element_text(size = 30))
+
 
   
   

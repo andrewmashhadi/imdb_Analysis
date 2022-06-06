@@ -189,7 +189,12 @@ lr_plot <-
   geom_point() + 
   geom_line() + 
   ylab("Area under the ROC Curve") +
-  scale_x_log10(labels = scales::label_number())
+  scale_x_log10(labels = scales::label_number()) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 30, face = "bold"),
+        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        axis.text = element_text(size = 25))
 lr_plot 
 dev.off()
 
@@ -258,7 +263,12 @@ dwplot <- last_fit__logreg %>%
   extract_fit_parsnip() %>% 
   tidy() %>%
   dwplot(dot_args = list(size = 2, color = "black"),
-         whisker_args = list(color = "black"),
-         vline = geom_vline(xintercept = 0, colour = "grey50", linetype = 2))
+         whisker_args = list(color = "grey"),
+         vline = geom_vline(xintercept = 0, colour = "#FF6666", linetype = 2)) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 30, face = "bold"),
+        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        axis.text = element_text(size = 25))
 dwplot
 dev.off()

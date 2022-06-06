@@ -350,7 +350,7 @@ boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter((between(year, 1
                                                                 ), 
                          aes_string(x="metacriticRatingBinned", y="budget")) +
   geom_boxplot() +
-  ggtitle('Runtime for Movies that Recieved an Oscar Nomination vs Not') +
+  ggtitle('Distribution of Movie Budget vs. Metacritic Ratings') +
   scale_y_continuous(labels=scales::dollar_format(),limits = c(0,3e08)) +
   theme_minimal() +
   theme(plot.title = element_text(size = 30, face = "bold"),

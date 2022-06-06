@@ -104,22 +104,21 @@ ggplot(data = df_box, aes(x=runtime,y=inf_adjusted_gp^.25)) +
 png(
 file.path("_assets",
 "runtime_on.png"),
-width=1080,
-height=800,
-pointsize=30 )
+width=2880,
+height=1800,
+pointsize=40 )
 
 
 ggplot(data = df, aes(x=as.factor(oscar_nom),y=runtime,fill=factor(oscar_nom))) +
-        geom_boxplot(color = "black",show.legend = F) +
-        scale_fill_manual(values=c("gray77", "goldenrod2")) +
+        geom_boxplot(fill="lightseagreen",color = "black",show.legend = F) +
         ylab("Runtime") + 
         xlab("Oscar Nominated") +
         ggtitle("Boxplot of Runtime by Oscar Nom") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 30, face = "bold"),
-              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
-              axis.text = element_text(size = 25))
+        theme(plot.title = element_text(size = 40, face = "bold"),
+              axis.title.x = element_text(size = 40, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 40, margin = margin(r = 20)),
+              axis.text = element_text(size = 40))
 
 ```
 
@@ -147,22 +146,21 @@ ggplot(data = df_box, aes(x=star_power,y=inf_adjusted_gp^.25)) +
 png(
 file.path("_assets",
 "star_power_on.png"),
-width=1080,
-height=800,
-pointsize=30 )
+width=2880,
+height=1800,
+pointsize=40 )
 
 
 ggplot(data = df, aes(x=as.factor(oscar_nom),y=star_power,fill=factor(oscar_nom))) +
-        geom_boxplot(color = "black",show.legend = F) +
-        scale_fill_manual(values=c("gray77", "goldenrod2")) +
+        geom_boxplot(fill="lightseagreen",color = "black",show.legend = F) +
         ylab("Star Power") + 
         xlab("Oscar Nominated") +
         ggtitle("Boxplot of Star Power by Oscar Nom") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 30, face = "bold"),
-              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
-              axis.text = element_text(size = 25))
+        theme(plot.title = element_text(size = 40, face = "bold"),
+              axis.title.x = element_text(size = 40, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 40, margin = margin(r = 20)),
+              axis.text = element_text(size = 40))
 
 
 ```
@@ -191,22 +189,21 @@ ggplot(data = df_box, aes(x=wr_pop,y=inf_adjusted_gp^.25)) +
 png(
 file.path("_assets",
 "writer_pop_on.png"),
-width=1080,
-height=800,
-pointsize=30 )
+width=2880,
+height=1800,
+pointsize=40 )
 
 
 ggplot(data = df, aes(x=as.factor(oscar_nom),y=wr_pop,fill=factor(oscar_nom))) +
-        geom_boxplot(color = "black",show.legend = F) +
-        scale_fill_manual(values=c("gray77", "goldenrod2")) +
+        geom_boxplot(fill="lightseagreen",color = "black",show.legend = F) +
         ylab("Writer Popularity") + 
         xlab("Oscar Nominated") +
         ggtitle("Boxplot of Writer Popularity by Oscar Nom") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 30, face = "bold"),
-              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
-              axis.text = element_text(size = 25))
+        theme(plot.title = element_text(size = 40, face = "bold"),
+              axis.title.x = element_text(size = 40, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 40, margin = margin(r = 20)),
+              axis.text = element_text(size = 40))
 
 
 
@@ -380,21 +377,21 @@ options(scipen=999)
 png(
 file.path("_assets",
 "budget_on.png"),
-width=1080,
-height=800,
-pointsize=30 )
+width=2880,
+height=1800,
+pointsize=40 )
 
 
 ggplot(data = df, aes(x=as.factor(oscar_nom),y=budget_adj, fill=factor(oscar_nom))) +
-        geom_boxplot(color = "black",show.legend = F) +
-        scale_fill_manual(values=c("gray77", "goldenrod2")) +
-        ylab("Inflation Adjusted Budget") +
+        geom_boxplot(fill="lightseagreen",color = "black",show.legend = F) +
+        scale_y_continuous(labels = seq(0,1000,100), breaks = seq(0, 1000000000, 100000000), expand = c(0,0)) +
+        ylab("Inflation Adjusted Budget (Millions $)") +
         xlab("Oscar Nominated") +
         ggtitle("Boxplot of Inflation Adjusted Budget by Oscar Nom") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 30, face = "bold"),
-              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
-              axis.text = element_text(size = 25))
+        theme(plot.title = element_text(size = 40, face = "bold"),
+              axis.title.x = element_text(size = 40, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 40, margin = margin(r = 20)),
+              axis.text = element_text(size = 40))
 ```
 

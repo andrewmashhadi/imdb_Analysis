@@ -150,7 +150,12 @@ for (i in names(df_imdb_details_movies_only)) {
         pointsize=24)
     hist <- ggplot(df_imdb_details_movies_only, aes_string(x=i)) + 
       geom_histogram(aes(y=..density..), colour="black", fill="grey", alpha = 0.5) +
-      geom_density(alpha=.2, fill="#FF6666")
+      geom_density(alpha=.2, fill="#FF6666") +
+      theme_minimal() +
+      theme(plot.title = element_text(size = 30, face = "bold"),
+            axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+            axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+            axis.text = element_text(size = 20))
     print(hist)
     dev.off()
   }
@@ -168,7 +173,12 @@ png(file.path("/_eda", paste0("eda__boxplot_profitMargin_vs_binnedbudget.png")),
 boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(!is.na(budgetBinned)), aes_string(x="budgetBinned", y="profit")) +
   geom_boxplot() +
   ggtitle('Profit Margin across Binned Metacritic Scores') +
-  ylim(-2e6, 1e6)
+  ylim(-2e6, 1e6) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 30, face = "bold"),
+        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        axis.text = element_text(size = 20))
 print(boxplot_output)
 dev.off()
 
@@ -179,7 +189,12 @@ png(file.path("_assets/_eda", paste0("eda__boxplot_profit_vs_runtime_binned.png"
 boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(!is.na(runtimeBinned)), aes_string(x="runtimeBinned", y="profit")) +
   geom_boxplot() +
   ggtitle('Profit Margin across Genres') +
-  ylim(-2e6, 1e6)
+  ylim(-2e6, 1e6) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 30, face = "bold"),
+        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        axis.text = element_text(size = 20))
 print(boxplot_output)
 dev.off()
 
@@ -190,7 +205,12 @@ png(file.path("_assets/_eda", paste0("eda__boxplot_profitMargin_vs_genre_binned.
 boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(!is.na(genre_binned)), aes_string(x="genre_binned", y="profit_margin")) +
   geom_boxplot() +
   ggtitle('Profit Margin across Genres') +
-  ylim(-1.5, 1.5)
+  ylim(-1.5, 1.5) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 30, face = "bold"),
+        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        axis.text = element_text(size = 20))
 print(boxplot_output)
 dev.off()
 
@@ -201,7 +221,12 @@ png(file.path("_assets/_eda", paste0("eda__boxplot_profitMargin_vs_year.png")),
 boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(!is.na(year_category)), aes_string(x="year_category", y="profit_margin")) +
   geom_boxplot() +
   ggtitle('Profit Margin Over the Years') +
-  ylim(-1.5, 1.5)
+  ylim(-1.5, 1.5) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 30, face = "bold"),
+        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        axis.text = element_text(size = 20))
 print(boxplot_output)
 dev.off()
 
@@ -212,7 +237,12 @@ png(file.path("_assets/_eda", paste0("eda__boxplot_profitMargin_vs_biographical.
 boxplot_output <- ggplot(df_imdb_details_movies_only, aes_string(x="biographical", y="profit_margin")) +
   geom_boxplot() +
   ggtitle('Profit Margin vs. Whether the Film is Biographical or Not') +
-  ylim(-1.5, 1.5)
+  ylim(-0.5, 1.5) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 30, face = "bold"),
+        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        axis.text = element_text(size = 20))
 print(boxplot_output)
 dev.off()
 
@@ -223,7 +253,12 @@ png(file.path("_assets/_eda", paste0("eda__boxplot_profitMargin_vs_basedOnNovel.
 boxplot_output <- ggplot(df_imdb_details_movies_only, aes_string(x="based_on_novel", y="profit_margin")) +
   geom_boxplot() +
   ggtitle('Profit Margin vs. Whether the Film is Based on a Novel or Not') +
-  ylim(-1.5, 1.5)
+  ylim(-0.5, 1.5) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 30, face = "bold"),
+        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        axis.text = element_text(size = 20))
 print(boxplot_output)
 dev.off()
 
@@ -235,7 +270,12 @@ png(file.path("_assets/_eda", paste0("eda__boxplot_runtime_vs_oscarNom.png")),
     pointsize=24)
 boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(between(year, 1990, 2000)), aes_string(x="oscar_nom", y="runtime")) +
   geom_boxplot() +
-  ggtitle('Runtime for Movies that Recieved an Oscar Nomination vs Not') 
+  ggtitle('Runtime for Movies that Recieved an Oscar Nomination vs Not') +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 30, face = "bold"),
+        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        axis.text = element_text(size = 20))
 print(boxplot_output)
 dev.off()
 
@@ -246,7 +286,12 @@ png(file.path("_assets/_eda", paste0("eda__boxplot_budget_vs_oscarNom.png")),
 boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(between(year, 1990, 2000)), aes_string(x="oscar_nom", y="budget")) +
   geom_boxplot() +
   ggtitle('Budget for Movies that Recieved an Oscar Nomination vs Not') +
-  scale_y_continuous(labels=scales::dollar_format(),limits = c(0,3e08)) 
+  scale_y_continuous(labels=scales::dollar_format(),limits = c(0,3e08)) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 30, face = "bold"),
+        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        axis.text = element_text(size = 20))
 print(boxplot_output)
 dev.off()
 
@@ -263,7 +308,12 @@ df_barplot_data <- df_imdb_details_movies_only %>%
 barplot_output <- ggplot(df_barplot_data %>% arrange(desc(oscar_nomination_percentage)), aes_string(x="genre_binned", y="oscar_nomination_percentage")) +
   geom_bar(stat="identity") +
   ggtitle('Percentage of Films that are Nominated for Oscars, by Genre') +
-  scale_y_continuous(labels = scales::percent)
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 30, face = "bold"),
+        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        axis.text = element_text(size = 20))
 print(barplot_output)
 dev.off()
 
@@ -282,7 +332,12 @@ df_barplot_data <- df_imdb_details_movies_only %>%
 barplot_output <- ggplot(df_barplot_data %>% arrange(month), aes_string(x="month", y="oscar_nomination_percentage")) +
   geom_bar(stat="identity") +
   ggtitle('Percentage of Films that are Nominated for Oscars, by Genre') +
-  scale_y_continuous(labels = scales::percent)
+  scale_y_continuous(labels = scales::percent)  +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 30, face = "bold"),
+        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        axis.text = element_text(size = 25))
 print(barplot_output)
 dev.off()
 
@@ -296,7 +351,12 @@ boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter((between(year, 1
                          aes_string(x="metacriticRatingBinned", y="budget")) +
   geom_boxplot() +
   ggtitle('Runtime for Movies that Recieved an Oscar Nomination vs Not') +
-  scale_y_continuous(labels=scales::dollar_format(),limits = c(0,3e08)) 
+  scale_y_continuous(labels=scales::dollar_format(),limits = c(0,3e08)) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 30, face = "bold"),
+        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
+        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        axis.text = element_text(size = 25))
 print(boxplot_output)
 dev.off()
 

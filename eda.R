@@ -239,6 +239,53 @@ boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(between(year, 19
 print(boxplot_output)
 dev.off()
 
+png(file.path("_assets/_eda", paste0("eda__boxplot_budget_vs_oscarNom.png")), 
+    width=1200, 
+    height=900, 
+    pointsize=24)
+boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter(between(year, 1990, 2000)), aes_string(x="oscar_nom", y="budget")) +
+  geom_boxplot() +
+  ggtitle('Budget for Movies that Recieved an Oscar Nomination vs Not') +
+  scale_y_continuous(labels=scales::dollar_format(),limits = c(0,3e08)) 
+print(boxplot_output)
+dev.off()
+
+#### oscar nom - barplots by genre
+png(file.path("_assets/_eda", paste0("eda__barplot_oscar_percentage_per_genre")), 
+    width=1800, 
+    height=900, 
+    pointsize=24)
+df_barplot_data <- df_imdb_details_movies_only %>% 
+  filter(between(year, 1990, 2000)) %>% 
+  group_by(genre_binned) %>% 
+  summarize(oscar_nomination_percentage = mean(as.integer(oscar_nom)-1, na.rm=TRUE)) %>%
+  arrange(desc(oscar_nomination_percentage))
+barplot_output <- ggplot(df_barplot_data %>% arrange(desc(oscar_nomination_percentage)), aes_string(x="genre_binned", y="oscar_nomination_percentage")) +
+  geom_bar(stat="identity") +
+  ggtitle('Percentage of Films that are Nominated for Oscars, by Genre') +
+  scale_y_continuous(labels = scales::percent)
+print(barplot_output)
+dev.off()
+
+#### oscar nom - barplots by release month
+png(file.path("_assets/_eda", paste0("eda__barplot_oscar_percentage_by_release_month")), 
+    width=1800, 
+    height=900, 
+    pointsize=24)
+df_barplot_data <- df_imdb_details_movies_only %>% 
+  filter((between(year, 1990, 2000)) &
+         (!is.na(month))) %>% 
+  mutate(month = as.factor(substr(date, 5, 6))) %>%
+  group_by(month) %>% 
+  summarize(oscar_nomination_percentage = mean(as.integer(oscar_nom)-1, na.rm=TRUE)) %>%
+  arrange(month)
+barplot_output <- ggplot(df_barplot_data %>% arrange(month), aes_string(x="month", y="oscar_nomination_percentage")) +
+  geom_bar(stat="identity") +
+  ggtitle('Percentage of Films that are Nominated for Oscars, by Genre') +
+  scale_y_continuous(labels = scales::percent)
+print(barplot_output)
+dev.off()
+
 png(file.path("_assets/_eda", paste0("eda__boxplot_budget_vs_metacritic_binned.png")), 
     width=1200, 
     height=900, 
@@ -249,12 +296,10 @@ boxplot_output <- ggplot(df_imdb_details_movies_only %>% filter((between(year, 1
                          aes_string(x="metacriticRatingBinned", y="budget")) +
   geom_boxplot() +
   ggtitle('Runtime for Movies that Recieved an Oscar Nomination vs Not') +
-  ylim(-0.5,3e08)
+  scale_y_continuous(labels=scales::dollar_format(),limits = c(0,3e08)) 
 print(boxplot_output)
 dev.off()
 
-## for stars and writers
-##
 
 #### scatterplots
 ggplot(df_imdb_details_movies_only %>% filter(year > 2010), aes(x=year, y=runtime, shape=metacriticRatingBinned, color=metacriticRatingBinned)) +

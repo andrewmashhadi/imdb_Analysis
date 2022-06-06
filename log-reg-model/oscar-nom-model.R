@@ -262,6 +262,14 @@ png( file.path("_assets/log-reg-plots", "dwplot.png"), width=1200, height=900, p
 dwplot <- last_fit__logreg %>%
   extract_fit_parsnip() %>% 
   tidy() %>%
+mutate(term = dplyr::recode(term,
+                            "metacriticRating" = "metacritic rating",
+                            "based_on_novel_X1" = "is based on novel",
+                            "genre_binned_animation" = "genre is animation",
+                            "genre_binned_comedy" = "genre is comedy",
+                            "genre_binned_drama" = "genre is drama",
+                            "genre_binned_other" = "genre is other genre"
+                            )) %>%
   dwplot(dot_args = list(size = 2, color = "black"),
          whisker_args = list(color = "grey"),
          vline = geom_vline(xintercept = 0, colour = "#FF6666", linetype = 2)) +

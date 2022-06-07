@@ -22,6 +22,7 @@ library(xtable)
 
 #oscarnom
 ```{r}
+
 on_tb <- as.matrix(factor(table(df$oscar_nom)))
 on_tb <- t(on_tb)
 on_tb <- as.data.frame(on_tb)
@@ -51,7 +52,7 @@ ggplot(data = df_box, aes(inf_adjusted_gp)) +
         xlab("Inflation Adjusted Gross Profit") +
         ggtitle("Histogram of Inflation Adjusted Gross Profit") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 30, face = "bold"),
+        theme(plot.title = element_text(size = 35, face = "bold"),
               axis.title.x = element_text(size = 25, margin = margin(t = 20)),
               axis.title.y = element_text(size = 25, margin = margin(r = 20)),
               axis.text = element_text(size = 25))
@@ -71,9 +72,9 @@ ggplot(data = df_box, aes(inf_adjusted_gp^.25)) +
         xlab("Inflation Adjusted Gross Profit^.25") +
         ggtitle("Histogram of Inflation Adjusted Gross Profit^.25") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 30, face = "bold"),
-              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        theme(plot.title = element_text(size = 35, face = "bold"),
+              axis.title.x = element_text(size = 30, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 30, margin = margin(r = 20)),
               axis.text = element_text(size = 25))
 
 
@@ -93,11 +94,11 @@ ggplot(data = df_box, aes(x=runtime,y=inf_adjusted_gp^.25)) +
         geom_point(color="lightseagreen") +
         ylab("Inflation Adjusted Gross Profit^.25") + 
         xlab("Runtime") +
-        ggtitle("Runtime vs Inflation Adjusted Gross Profit^.25") +
+        ggtitle("Inflation Adjusted Gross Profit^.25 vs Runtime") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 30, face = "bold"),
-              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        theme(plot.title = element_text(size = 35, face = "bold"),
+              axis.title.x = element_text(size = 30, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 30, margin = margin(r = 20)),
               axis.text = element_text(size = 25))
 
 
@@ -115,10 +116,10 @@ ggplot(data = df, aes(x=as.factor(oscar_nom),y=runtime,fill=factor(oscar_nom))) 
         xlab("Oscar Nominated") +
         ggtitle("Boxplot of Runtime by Oscar Nom") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 40, face = "bold"),
-              axis.title.x = element_text(size = 40, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 40, margin = margin(r = 20)),
-              axis.text = element_text(size = 40))
+        theme(plot.title = element_text(size = 35, face = "bold"),
+              axis.title.x = element_text(size = 30, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 30, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
 
 ```
 
@@ -136,11 +137,11 @@ ggplot(data = df_box, aes(x=star_power,y=inf_adjusted_gp^.25)) +
         geom_point(color="lightseagreen") +
         ylab("Inflation Adjusted Gross Profit^.25") + 
         xlab("Star Power") +
-        ggtitle("Star Power vs Inflation Adjusted Gross Profit^.25") +
+        ggtitle("Inflation Adjusted Gross Profit^.25 vs Star Power") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 30, face = "bold"),
-              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        theme(plot.title = element_text(size = 34, face = "bold"),
+              axis.title.x = element_text(size = 30, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 30, margin = margin(r = 20)),
               axis.text = element_text(size = 25))
 
 png(
@@ -157,10 +158,10 @@ ggplot(data = df, aes(x=as.factor(oscar_nom),y=star_power,fill=factor(oscar_nom)
         xlab("Oscar Nominated") +
         ggtitle("Boxplot of Star Power by Oscar Nom") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 40, face = "bold"),
-              axis.title.x = element_text(size = 40, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 40, margin = margin(r = 20)),
-              axis.text = element_text(size = 40))
+        theme(plot.title = element_text(size = 35, face = "bold"),
+              axis.title.x = element_text(size = 30, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 30, margin = margin(r = 20)),
+              axis.text = element_text(size = 30))
 
 
 ```
@@ -179,11 +180,11 @@ ggplot(data = df_box, aes(x=wr_pop,y=inf_adjusted_gp^.25)) +
         geom_point(color="lightseagreen") +
         ylab("Inflation Adjusted Gross Profit^.25") + 
         xlab("Writer Popularity") +
-        ggtitle("Writer Popularity vs Inflation Adjusted Gross Profit^.25") +
+        ggtitle("Inf. Adj. Gross Profit^.25 vs Writer Popularity") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 30, face = "bold"),
-              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        theme(plot.title = element_text(size = 35, face = "bold"),
+              axis.title.x = element_text(size = 30, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 30, margin = margin(r = 20)),
               axis.text = element_text(size = 25))
 
 png(
@@ -200,10 +201,10 @@ ggplot(data = df, aes(x=as.factor(oscar_nom),y=wr_pop,fill=factor(oscar_nom))) +
         xlab("Oscar Nominated") +
         ggtitle("Boxplot of Writer Popularity by Oscar Nom") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 40, face = "bold"),
-              axis.title.x = element_text(size = 40, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 40, margin = margin(r = 20)),
-              axis.text = element_text(size = 40))
+        theme(plot.title = element_text(size = 35, face = "bold"),
+              axis.title.x = element_text(size = 30, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 30, margin = margin(r = 20)),
+              axis.text = element_text(size = 28))
 
 
 
@@ -222,14 +223,18 @@ pointsize=30 )
 
 ggplot(data = df_box, aes(x=release_period,y=inf_adjusted_gp^.25)) +
         geom_boxplot(fill="lightseagreen", color = "black") +
+        scale_x_discrete(labels=c("Aug. to Oct.", 
+                                  "Feb. to Apr.",
+                                  "May to July",
+                                  "Nov. to Jan.")) +
         ylab("Inflation Adjusted Gross Profit^.25") + 
         xlab("Release Period") +
         ggtitle("Boxplot of Gross Profit^.25 by Release Period") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 30, face = "bold"),
-              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
-              axis.text = element_text(size = 25))
+        theme(plot.title = element_text(size = 35, face = "bold"),
+              axis.title.x = element_text(size = 30, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 30, margin = margin(r = 20)),
+              axis.text = element_text(size = 23))
 
 
 #add oscarnom
@@ -260,10 +265,10 @@ ggplot(data = df_box, aes(x=co_size,y=inf_adjusted_gp^.25)) +
         xlab("Company Size") +
         ggtitle("Boxplot of Gross Profit^.25 by Company Size") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 30, face = "bold"),
-              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
-              axis.text = element_text(size = 25))
+        theme(plot.title = element_text(size = 35, face = "bold"),
+              axis.title.x = element_text(size = 30, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 30, margin = margin(r = 20)),
+              axis.text = element_text(size = 24))
 
 co_tab <- as.data.frame.matrix(prop.table(table(factor(df$co_size),factor(df$oscar_nom)),margin=1))
 colnames(co_tab) <- c("No Oscar Nom", "Oscar Nom")
@@ -289,9 +294,9 @@ ggplot(data = df_box, aes(x=dir_pop_fac,y=inf_adjusted_gp^.25)) +
         xlab("Director Popularity") +
         ggtitle("Boxplot of Gross Profit^.25 by Director Popularity") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 30, face = "bold"),
-              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        theme(plot.title = element_text(size = 34, face = "bold"),
+              axis.title.x = element_text(size = 30, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 30, margin = margin(r = 20)),
               axis.text = element_text(size = 25))
 
 #add oscar plot
@@ -316,15 +321,18 @@ width=1080,
 height=800,
 pointsize=30 )
 
+# Cleaning rating
+df_box$rating[df_box$rating %notin% c("PG", "PG-13", "R")] <- "Other"
+
 ggplot(data = df_box, aes(x=rating,y=inf_adjusted_gp^.25)) +
         geom_boxplot(fill="lightseagreen", color = "black") +
         ylab("Inflation Adjusted Gross Profit^.25") + 
         xlab("Rating") +
         ggtitle("Boxplot of Gross Profit^.25 by Rating") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 30, face = "bold"),
-              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
+        theme(plot.title = element_text(size = 35, face = "bold"),
+              axis.title.x = element_text(size = 30, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 30, margin = margin(r = 20)),
               axis.text = element_text(size = 25))
 
 #add oscar
@@ -340,6 +348,19 @@ writeLines(xxx,file.path("_assets", "rantab.tex"))
 ```
 #genre
 ```{r}
+
+genre <- c()
+df_box$genres[df_box$genres == ""] <- "Other"
+for (i in 1:3408) {
+  num_genres <- length(strsplit(df_box$genres, ", ")[[i]])
+  random_genre_idx <- sample(1:num_genres, 1)
+  genre[i] <- strsplit(df_box$genres, ", ")[[i]][random_genre_idx]
+}
+
+# Cleaning genre - some genres had low counts
+df_box$genre <- genre
+df_box$genre[df_box$genre %in% c("Animation", "Biography", "Documentary", "Family", "Fantasy", "Film-Noir", "History", "Music", "Musical", "Mystery", "Other", "Reality-TV", "Sci-Fi", "Short", "Sport", "Talk-Show", "War", "Western")] <- "Other"
+
 png(
 file.path("_assets",
 "genre_iagp_bp.png"),
@@ -353,10 +374,10 @@ ggplot(data = df_box, aes(x=genre,y=inf_adjusted_gp^.25)) +
         xlab("Genre") +
         ggtitle("Boxplot of Gross Profit^.25 by Genre") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 30, face = "bold"),
-              axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 25, margin = margin(r = 20)),
-              axis.text = element_text(size = 25))
+        theme(plot.title = element_text(size = 35, face = "bold"),
+              axis.title.x = element_text(size = 30, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 30, margin = margin(r = 20)),
+              axis.text = element_text(size = 20))
 
 #need oscar nom
 
@@ -387,11 +408,11 @@ ggplot(data = df, aes(x=as.factor(oscar_nom),y=budget_adj, fill=factor(oscar_nom
         scale_y_continuous(labels = seq(0,1000,100), breaks = seq(0, 1000000000, 100000000), expand = c(0,0)) +
         ylab("Inflation Adjusted Budget (Millions $)") +
         xlab("Oscar Nominated") +
-        ggtitle("Boxplot of Inflation Adjusted Budget by Oscar Nom") +
+        ggtitle("Boxplot of Inf. Adj. Budget by Oscar Nom") +
         theme_minimal() +
-        theme(plot.title = element_text(size = 40, face = "bold"),
-              axis.title.x = element_text(size = 40, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 40, margin = margin(r = 20)),
-              axis.text = element_text(size = 40))
+        theme(plot.title = element_text(size = 35, face = "bold"),
+              axis.title.x = element_text(size = 28, margin = margin(t = 20)),
+              axis.title.y = element_text(size = 28, margin = margin(r = 20)),
+              axis.text = element_text(size = 25))
 ```
 

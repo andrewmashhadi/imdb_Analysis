@@ -1,0 +1,9 @@
+
+RF:
+  precision          0.685
+  recall             0.420
+
+
+LR:
+  precision          0.702
+  recall             0.431

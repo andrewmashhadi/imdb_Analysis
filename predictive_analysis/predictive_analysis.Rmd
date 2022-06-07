@@ -556,20 +556,21 @@ df <- final_rf %>%
 
 df %>%
   vip(geom = "col")+
-  # scale_x_discrete(labels=rev(c("runtime",
-  #                           "budget",
-  #                           "genre is other genre",
-  #                           "Nov. to Jan. release period",
-  #                           "directory popularity",
-  #                           "star power",
-  #                           "rating, PG-13",
-  #                           "genre is drama",                     
-  #                           "rating, R",
-  #                           "writer popularity"))) +
+  labs(title="Variable Importances") + 
+  scale_x_discrete(labels=rev(c("runtime",
+                            "budget",
+                            "genre is other genre",
+                            "Nov. to Jan. release period",
+                            "directory popularity",
+                            "star power",
+                            "rating, PG-13",
+                            "genre is drama",
+                            "rating, R",
+                            "writer popularity"))) +
   theme_minimal() +
-  theme(plot.title = element_text(size = 30, face = "bold"), 
-        axis.title.x = element_text(size = 25),
-        axis.title.y = element_text(size = 25),
+  theme(plot.title = element_text(size = 35, face = "bold"), 
+        axis.title.x = element_text(size = 30),
+        axis.title.y = element_text(size = 30),
         axis.text = element_text(size = 25)) + 
     scale_y_continuous(limit=c(0, 0.055))
 
@@ -673,10 +674,10 @@ df %>%
   ylab("Proportion of Oscar Nominees") + 
   ggtitle("Oscar Nominees By Genres") + 
   theme_minimal() +
-  theme(plot.title = element_text(size = 25, face = "bold"), 
-        axis.title.x = element_text(size = 17, margin = ggplot2::margin(t = 20)),
-        axis.title.y = element_text(size = 17, margin = ggplot2::margin(r = 20)),
-        axis.text = element_text(size = 17))
+  theme(plot.title = element_text(size = 35, face = "bold"), 
+        axis.title.x = element_text(size = 30, margin = ggplot2::margin(t = 20)),
+        axis.title.y = element_text(size = 30, margin = ggplot2::margin(r = 20)),
+        axis.text = element_text(size = 20))
 
 
 df %>%
@@ -692,9 +693,9 @@ df %>%
   ylab("Proportion of Oscar Nominees") + 
   ggtitle("Oscar Nominees By Release Period") + 
   theme_minimal() +
-  theme(plot.title = element_text(size = 28, face = "bold"), 
-        axis.title.x = element_text(size = 26, margin = ggplot2::margin(t = 20)),
-        axis.title.y = element_text(size = 26, margin = ggplot2::margin(r = 20)),
+  theme(plot.title = element_text(size = 35, face = "bold"), 
+        axis.title.x = element_text(size = 30, margin = ggplot2::margin(t = 20)),
+        axis.title.y = element_text(size = 30, margin = ggplot2::margin(r = 20)),
         axis.text = element_text(size = 26))
 
 ```
@@ -884,20 +885,21 @@ final_rf %>%
       data = juice(model_prep)
   ) %>%
   vip(geom = "col")+
-  # scale_x_discrete(labels=rev(c("budget",
-  #                         "runtime",
-  #                         "company size",
-  #                         "writer popularity",
-  #                         "rating, R",
-  #                         "star power",
-  #                         "May to July release period",
-  #                         "director popularity",
-  #                         "rating, PG-13",
-  #                         "Nov. to Jan. release period"))) +
+  labs(title="Variable Importances")+
+  scale_x_discrete(labels=rev(c("budget",
+                          "runtime",
+                          "company size",
+                          "writer popularity",
+                          "rating, R",
+                          "star power",
+                          "May to July release period",
+                          "director popularity",
+                          "rating, PG-13",
+                          "Nov. to Jan. release period"))) +
   theme_minimal() +
-  theme(plot.title = element_text(size = 30, face = "bold"), 
-        axis.title.x = element_text(size = 25, margin = ggplot2::margin(t = 20)),
-        axis.title.y = element_text(size = 25, margin = ggplot2::margin(r = 20)),
+  theme(plot.title = element_text(size = 35, face = "bold"), 
+        axis.title.x = element_text(size = 30, margin = ggplot2::margin(t = 20)),
+        axis.title.y = element_text(size = 30, margin = ggplot2::margin(r = 20)),
         axis.text = element_text(size = 25))
 
 
@@ -908,10 +910,10 @@ final_rf %>%
 r2 <- (cor(imdb_details_extd3$inf_adjusted_gp, imdb_details_extd3$budget_adj,use = "na.or.complete"))^2
 
 ggplot(imdb_details_extd3, aes(x=budget_adj, y=inf_adjusted_gp)) + 
-geom_point() + 
+geom_point(color = "lightseagreen",show.legend = F) + 
 ylab("Gross Profit^.25") +
-xlab("Budget (in units of $1,000,000)") +
-ggtitle("Gross Profit^.25 Vs Budget") +
+xlab("Inflation Adjusted Budget (Millions $)") +
+ggtitle("Gross Profit^.25 Vs Inf. Adj. Budget") +
 theme_minimal() + 
 ylim(0, 350) +
 scale_x_continuous(labels = scales::label_comma(scale = 1e-6)) +

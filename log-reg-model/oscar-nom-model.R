@@ -23,6 +23,10 @@ if(!dir.exists("_assets/log-reg-plots")) {                                      
 }
 # ---- set options ---- #
 options(width=90, xtable.comment=FALSE, stringsAsFactors=FALSE)
+font_size__title <- 35
+font_size__xaxis <- 30
+font_size__yaxis <- 30
+font_size__text  <- 25
 
 # ---- libraries ---- #
 library(RMySQL)
@@ -191,10 +195,11 @@ lr_plot <-
   ylab("Area under the ROC Curve") +
   scale_x_log10(labels = scales::label_number()) +
   theme_minimal() +
-  theme(plot.title = element_text(size = 30, face = "bold"),
-        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
-        axis.text = element_text(size = 25))
+  theme(plot.title = element_text(size = font_size__title, face = "bold"),
+        axis.title.x = element_text(size = font_size__xaxis, margin = margin(t = 20)),
+        axis.title.y = element_text(size = font_size__yaxis, margin = margin(r = 20)),
+        axis.text = element_text(size = font_size__text)) +
+  ggtitle("Resulting ROC-AUC from Tuning Iterations")
 lr_plot 
 dev.off()
 
@@ -220,8 +225,15 @@ lr_auc <-
   roc_curve(oscar_nom, .pred_0) %>% 
   mutate(model = "Logistic Regression")
 
-autoplot(lr_auc)
-
+png( file.path("_assets/log-reg-plots", "log_reg__ROC_curve.png"), width=1200, height=900, pointsize=24 )
+autoplot(lr_auc) +
+  ggtitle("ROC Curve") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = font_size__title, face = "bold"),
+        axis.title.x = element_text(size = font_size__xaxis, margin = margin(t = 20)),
+        axis.title.y = element_text(size = font_size__yaxis, margin = margin(r = 20)),
+        axis.text = element_text(size = font_size__text))
+dev.off()
 
 # ---- fit final model ---- #
 # the last model
@@ -256,27 +268,28 @@ last_fit__logreg %>%
   tidy() %>%
   select(term, estimate) %>%
   mutate(odds = exp(estimate))
-  
+
 #### dw plot
 png( file.path("_assets/log-reg-plots", "dwplot.png"), width=1200, height=900, pointsize=24 )
 dwplot <- last_fit__logreg %>%
   extract_fit_parsnip() %>% 
   tidy() %>%
-mutate(term = dplyr::recode(term,
-                            "metacriticRating" = "metacritic rating",
-                            "based_on_novel_X1" = "is based on novel",
-                            "genre_binned_animation" = "genre is animation",
-                            "genre_binned_comedy" = "genre is comedy",
-                            "genre_binned_drama" = "genre is drama",
-                            "genre_binned_other" = "genre is other genre"
-                            )) %>%
+  mutate(term = dplyr::recode(term,
+                              "metacriticRating" = "metacritic rating",
+                              "based_on_novel_X1" = "is based on novel",
+                              "genre_binned_animation" = "genre is animation",
+                              "genre_binned_comedy" = "genre is comedy",
+                              "genre_binned_drama" = "genre is drama",
+                              "genre_binned_other" = "genre is other genre"
+  )) %>%
   dwplot(dot_args = list(size = 2, color = "black"),
          whisker_args = list(color = "grey"),
          vline = geom_vline(xintercept = 0, colour = "#FF6666", linetype = 2)) +
+  ggtitle("Logistic Regression Coefficient Values") +
   theme_minimal() +
-  theme(plot.title = element_text(size = 30, face = "bold"),
-        axis.title.x = element_text(size = 25, margin = margin(t = 20)),
-        axis.title.y = element_text(size = 25, margin = margin(r = 20)),
-        axis.text = element_text(size = 25))
+  theme(plot.title = element_text(size = font_size__title, face = "bold"),
+        axis.title.x = element_text(size = font_size__xaxis, margin = margin(t = 20)),
+        axis.title.y = element_text(size = font_size__yaxis, margin = margin(r = 20)),
+        axis.text = element_text(size = font_size__text))
 dwplot
 dev.off()

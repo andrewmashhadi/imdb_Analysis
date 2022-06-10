@@ -8,9 +8,11 @@
 
 
 ## Potential Analyses:
-* Use Ch. 3 from "Welcome to Text Mining with R - Text Mining with R" reference to find the tf, idf, etc. to look into text frequencies and inverse document frequncy from movie/show plot descriptions and potnentially use these for some predictions of imdbrating or box office numbers. 
-* Use Ch. 6 from "Welcome to Text Mining with R - Text Mining with R" reference to cluster/group movies and shows based on their short descriptions (using doc-topic probability from LDA). Could use the number of unique genres for the number of clusters (Ajay has an example). We could use this to recommend movies/shows based on the words in its description, or on a movie that you liked in the past. We could choose less or more clusters based on how similar you would want the movie/show. This would be our unsupervised analysis route.
-* We could look at budget, runtime, year, type, rating to predict imdb_rating using supervised learning methods such as linear regression, random forest, nnet, and then use ANOVA to serve as more of exploratory data analysis.
-* Could we somehow use both? For example, if we create groups/clusters and use that information to determine the imdb_rating or box-office values with some sort of supervised learning.
-* For any supervised learning, we should make sure to use K-fold CV and report the results in our paper.
-        
+For the purposes of our analysis, we answer the question of what traits and features are correlated with a successful movie
+by breaking down the goal of making a movie into three different perspectives:
+* Model and maximize box office profits (random forest and lm)
+* Model and maximize chances of an Academy Award nomination (random forest and log reg)
+* Finding movies that are similar to a specified existing film (knn, k-means, k-modes, tidytext tools, etc.)
+Throughout this report, we will leverage different statistical tools and methods to aid a hypothetical movie producer in their
+pursuit of creating a successful movie, on the condition that they provide one of the aforementioned goals as a primary
+objective.
